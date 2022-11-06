@@ -1,7 +1,7 @@
 <?php namespace lang\ast\syntax\php\unittest;
 
 use lang\ast\unittest\emit\EmittingTest;
-use lang\{Primitive, Nullable, ArrayType, MapType, TypeUnion, IllegalArgumentException};
+use lang\{Primitive, Nullable, ArrayType, MapType, TypeUnion, FunctionType, IllegalArgumentException};
 use unittest\{Assert, Test};
 
 class GenericsTest extends EmittingTest {
@@ -66,6 +66,19 @@ class GenericsTest extends EmittingTest {
     Assert::equals(
       new TypeUnion([Primitive::$INT, $c]),
       $t->newGenericType([$c])->getMethod('push')->getParameter(0)->getType()
+    );
+  }
+
+  #[Test]
+  public function generic_function_type() {
+    $t= $this->type('class <T><E> {
+      public function comparing(function(E, E): int $comparator) { }
+    }');
+
+    $c= Primitive::$STRING;
+    Assert::equals(
+      new FunctionType([$c, $c], Primitive::$INT),
+      $t->newGenericType([$c])->getMethod('comparing')->getParameter(0)->getType()
     );
   }
 

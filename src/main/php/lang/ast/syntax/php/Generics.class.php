@@ -3,7 +3,7 @@
 use lang\ast\Code;
 use lang\ast\nodes\{Annotation, ArrayLiteral, Literal, InstanceExpression, InvokeExpression, ScopeExpression};
 use lang\ast\syntax\Extension;
-use lang\ast\types\{IsArray, IsGeneric, IsMap, IsUnion, IsNullable, IsValue};
+use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsMap, IsUnion, IsNullable, IsValue};
 
 class Generics implements Extension {
 
@@ -45,6 +45,23 @@ class Generics implements Extension {
         }
       }
       if ($union[0]) return implode('|', $union[1]);
+    } else if ($type instanceof IsFunction) {
+      $function= [false, [], null];
+      foreach ($type->signature as $parameter) {
+        if ($generic= self::generic($parameter, $components)) {
+          $function[0]= true;
+          $function[1][]= $generic;
+        } else {
+          $function[1][]= $parameter ? $parameter->literal() : 'var';
+        }
+      }
+      if ($generic= self::generic($type->returns, $components)) {
+        $function[0]= true;
+        $function[2]= $generic;
+      } else {
+        $function[2]= $type->returns ? $type->returns->literal() : 'var';
+      }
+      if ($function[0]) return '(function('.implode(', ', $function[1]).'): '.$function[2].')';
     }
     return null;
   }
