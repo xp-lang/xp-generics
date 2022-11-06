@@ -164,7 +164,7 @@ class Generics implements Extension {
       return $node;
     });
 
-    $emitter->transform('class', function($codegen, $node) {
+    $types= function($codegen, $node) {
       if ($node->name instanceof IsGeneric) {
 
         // Attach generic annotation on type with components
@@ -187,6 +187,9 @@ class Generics implements Extension {
         $node->name= $node->name->base;
       }
       return $node;
-    });
+    };
+
+    $emitter->transform('class', $types);
+    $emitter->transform('interface', $types);
   }
 }

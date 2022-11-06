@@ -2,13 +2,13 @@
 
 use lang\ast\unittest\emit\EmittingTest;
 use lang\{Primitive, Nullable, ArrayType, MapType, TypeUnion, FunctionType, IllegalArgumentException};
-use unittest\{Assert, Test};
+use unittest\{Assert, Test, Values};
 
 class GenericsTest extends EmittingTest {
 
-  #[Test]
-  public function is_generic_definition() {
-    $t= $this->type('class <T><E> { }');
+  #[Test, Values(['class <T><E> { }', 'interface <T><E> { }'])]
+  public function is_generic_definition($declaration) {
+    $t= $this->type($declaration);
     Assert::true($t->isGenericDefinition());
   }
 
