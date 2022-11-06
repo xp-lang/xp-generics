@@ -107,7 +107,7 @@ class Generics implements Extension {
               ),
               [new ArrayLiteral($typeargs)]
             ),
-            new Literal('newInstance'),
+            new Literal('newInstance')
           ),
           $node->arguments
         );
