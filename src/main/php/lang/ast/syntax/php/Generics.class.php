@@ -34,6 +34,27 @@ class Generics implements Extension {
   }
 
   /**
+   * Returns whether a given list contains a generic component
+   *
+   * @param  lang.ast.Type[] $list
+   * @param  lang.ast.Type[] $components
+   * @return ?string
+   */
+  private static function generics($list, $components) {
+    $contained= false;
+    $generics= [];
+    foreach ($list as $type) {
+      if ($generic= self::generic($type, $components)) {
+        $contained= true;
+        $generics[]= $generic;
+      } else {
+        $generics[]= $type ? $type->literal() : 'var';
+      }
+    }
+    return $contained ? $generics : null;
+  }
+
+  /**
    * Returns whether a given type is a generic component
    *
    * @param  lang.ast.Type $type
@@ -50,44 +71,16 @@ class Generics implements Extension {
     } else if ($type instanceof IsMap) {
       if ($generic= self::generic($type->value, $components)) return '[:'.$generic.']';
     } else if ($type instanceof IsUnion) {
-      $t= [false, []];
-      foreach ($type->components as $component) {
-        if ($generic= self::generic($component, $components)) {
-          $t[0]= true;
-          $t[1][]= $generic;
-        } else {
-          $t[1][]= $component->literal();
-        }
-      }
-      if ($t[0]) return implode('|', $t[1]);
+      if ($generic= self::generics($type->components, $components)) return implode('|', $generic);
     } else if ($type instanceof IsGeneric) {
-      $t= [false, []];
-      foreach ($type->components as $component) {
-        if ($generic= self::generic($component, $components)) {
-          $t[0]= true;
-          $t[1][]= $generic;
-        } else {
-          $t[1][]= $component->literal();
-        }
+      if ($generic= self::generics($type->components, $components)) {
+        return $type->base->name().'<'.implode(', ', $generic).'>';
       }
-      if ($t[0]) return $type->base->name().'<'.implode(', ', $t[1]).'>';
     } else if ($type instanceof IsFunction) {
-      $t= [false, [], null];
-      foreach ($type->signature as $parameter) {
-        if ($generic= self::generic($parameter, $components)) {
-          $t[0]= true;
-          $t[1][]= $generic;
-        } else {
-          $t[1][]= $parameter ? $parameter->literal() : 'var';
-        }
+      if ($generic= self::generics([$type->returns, ...$type->signature], $components)) {
+        $return= array_shift($generic);
+        return '(function('.implode(', ', $generic).'): '.$return.')';
       }
-      if ($generic= self::generic($type->returns, $components)) {
-        $t[0]= true;
-        $t[2]= $generic;
-      } else {
-        $t[2]= $type->returns ? $type->returns->literal() : 'var';
-      }
-      if ($t[0]) return '(function('.implode(', ', $t[1]).'): '.$t[2].')';
     }
     return null;
   }
