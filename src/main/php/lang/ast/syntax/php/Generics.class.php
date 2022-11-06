@@ -19,7 +19,7 @@ class Generics implements Extension {
   }
 
   /**
-   * Returns whether a given parameter is a generic type component
+   * Returns whether a given type is a generic component
    *
    * @param  lang.ast.Type $type
    * @param  lang.ast.Type[] $components
