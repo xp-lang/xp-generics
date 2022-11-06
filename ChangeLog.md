@@ -3,6 +3,10 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 0.2.1 / 2022-11-06
+
+* Adjust to changes in `lang.ast.types.IsGeneric` - @thekid
+
 ## 0.2.0 / 2022-11-06
 
 * Added support for generic function types such as `function(T, T): int`.

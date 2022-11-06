@@ -150,7 +150,7 @@ class Generics implements Extension {
               new InstanceExpression(
                 new InvokeExpression(
                   new ScopeExpression('\\lang\\XPClass', new Literal('forName')),
-                  [new ScopeExpression($node->type->base, new Literal('class'))]
+                  [new ScopeExpression($node->type->base->literal(), new Literal('class'))]
                 ),
                 new Literal('newGenericType')
               ),
@@ -183,8 +183,8 @@ class Generics implements Extension {
           self::annotate($method, self::method($method, $node->name->components));
         }
 
-        // Rewrite class name
-        $node->name= new IsValue($node->name->base);
+        // Rewrite class name to the generic's base type
+        $node->name= $node->name->base;
       }
       return $node;
     });
