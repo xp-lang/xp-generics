@@ -1,7 +1,7 @@
 <?php namespace lang\ast\syntax\php\unittest;
 
 use lang\ast\unittest\emit\EmittingTest;
-use lang\{Primitive, Nullable, ArrayType, MapType, IllegalArgumentException};
+use lang\{Primitive, Nullable, ArrayType, MapType, TypeUnion, IllegalArgumentException};
 use unittest\{Assert, Test};
 
 class GenericsTest extends EmittingTest {
@@ -54,6 +54,19 @@ class GenericsTest extends EmittingTest {
 
     $c= Primitive::$STRING;
     Assert::equals($c, $t->newGenericType([$c])->getMethod('push')->getParameter(0)->getType());
+  }
+
+  #[Test]
+  public function generic_type_union() {
+    $t= $this->type('class <T><E> {
+      public function push(int|E $element) { }
+    }');
+
+    $c= Primitive::$STRING;
+    Assert::equals(
+      new TypeUnion([Primitive::$INT, $c]),
+      $t->newGenericType([$c])->getMethod('push')->getParameter(0)->getType()
+    );
   }
 
   #[Test]

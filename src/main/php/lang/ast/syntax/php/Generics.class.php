@@ -3,7 +3,7 @@
 use lang\ast\Code;
 use lang\ast\nodes\{Annotation, ArrayLiteral, Literal, InstanceExpression, InvokeExpression, ScopeExpression};
 use lang\ast\syntax\Extension;
-use lang\ast\types\{IsArray, IsGeneric, IsMap, IsNullable, IsValue};
+use lang\ast\types\{IsArray, IsGeneric, IsMap, IsUnion, IsNullable, IsValue};
 
 class Generics implements Extension {
 
@@ -34,6 +34,17 @@ class Generics implements Extension {
       if ($generic= self::generic($type->component, $components)) return $generic.'[]';
     } else if ($type instanceof IsMap) {
       if ($generic= self::generic($type->value, $components)) return '[:'.$generic.']';
+    } else if ($type instanceof IsUnion) {
+      $union= [false, []];
+      foreach ($type->components as $component) {
+        if ($generic= self::generic($component, $components)) {
+          $union[0]= true;
+          $union[1][]= $generic;
+        } else {
+          $union[1][]= $component->literal();
+        }
+      }
+      if ($union[0]) return implode('|', $union[1]);
     }
     return null;
   }
