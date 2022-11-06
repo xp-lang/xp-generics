@@ -18,7 +18,7 @@ Example
 namespace com\example;
 
 class PriorityQueue<E> {
-  private array<E> $elements;
+  private $elements;
   private $comparator= null;
   private $sorted= true;
 
