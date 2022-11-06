@@ -17,25 +17,37 @@ Example
 // Declaration
 namespace com\example;
 
-class Queue<E> {
+class PriorityQueue<E> {
   private array<E> $elements;
+  private $comparator= null;
+  private $sorted= true;
 
   public function __construct(E... $elements) {
     $this->elements= $elements;
   }
 
+  public function comparing(function(E, E): int $comparator): self {
+    $this->comparator= $comparator;
+    return $this;
+  }
+
   public function push(E $element) {
     $this->elements[]= $element;
+    $this->sorted= false;
   }
 
   public function pop(): ?E {
+    if (!$this->sorted) {
+      $this->comparator ? usort($this->elements, $this->comparator) : sort($this->elements);
+      $this->sorted= true;
+    }
     return array_pop($this->elements);
   }
 }
 
 
 // Usage
-$q= new Queue<string>();
+$q= new PriorityQueue<string>();
 $q->push('Test');
 
 $q->push(123); // lang.IllegalArgumentException

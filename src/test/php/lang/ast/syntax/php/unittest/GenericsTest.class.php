@@ -165,4 +165,15 @@ class GenericsTest extends EmittingTest {
       }
     }');
   }
+
+  #[Test, Expect(class: IllegalArgumentException::class, withMessage: '/Argument 1 .+ must be of .+, .+ given/')]
+  public function incorrect_function_type() {
+    $this->run('class <T><E> {
+      public function comparing(function(E, E): int $comparator) { /* Never run */ }
+
+      public function run() {
+        return new self<string>()->comparing(fn(int $a, int $b): int => $a <=> $b);
+      }
+    }');
+  }
 }
