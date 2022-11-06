@@ -3,6 +3,8 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 0.3.0 / 2022-11-06
+
 * Supported extending from generic base classes / parent interfaces
   Requires https://github.com/xp-framework/core/releases/tag/v11.4.6
   (@thekid)
