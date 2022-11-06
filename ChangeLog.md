@@ -3,6 +3,10 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 0.4.0 / 2022-11-07
+
+* Use release version of `xp-framework/compiler` - @thekid
+
 ## 0.3.1 / 2022-11-06
 
 * Fixed support for referencing other generic value types - @thekid
