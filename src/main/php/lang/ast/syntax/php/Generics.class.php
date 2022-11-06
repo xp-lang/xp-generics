@@ -77,7 +77,7 @@ class Generics implements Extension {
         return $type->base->name().'<'.implode(', ', $generic).'>';
       }
     } else if ($type instanceof IsFunction) {
-      if ($generic= self::generics([$type->returns, ...$type->signature], $components)) {
+      if ($generic= self::generics(array_merge([$type->returns], $type->signature), $components)) {
         $return= array_shift($generic);
         return '(function('.implode(', ', $generic).'): '.$return.')';
       }
