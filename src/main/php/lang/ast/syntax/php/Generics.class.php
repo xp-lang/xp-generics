@@ -50,33 +50,44 @@ class Generics implements Extension {
     } else if ($type instanceof IsMap) {
       if ($generic= self::generic($type->value, $components)) return '[:'.$generic.']';
     } else if ($type instanceof IsUnion) {
-      $union= [false, []];
+      $t= [false, []];
       foreach ($type->components as $component) {
         if ($generic= self::generic($component, $components)) {
-          $union[0]= true;
-          $union[1][]= $generic;
+          $t[0]= true;
+          $t[1][]= $generic;
         } else {
-          $union[1][]= $component->literal();
+          $t[1][]= $component->literal();
         }
       }
-      if ($union[0]) return implode('|', $union[1]);
+      if ($t[0]) return implode('|', $t[1]);
+    } else if ($type instanceof IsGeneric) {
+      $t= [false, []];
+      foreach ($type->components as $component) {
+        if ($generic= self::generic($component, $components)) {
+          $t[0]= true;
+          $t[1][]= $generic;
+        } else {
+          $t[1][]= $component->literal();
+        }
+      }
+      if ($t[0]) return $type->base->name().'<'.implode(', ', $t[1]).'>';
     } else if ($type instanceof IsFunction) {
-      $function= [false, [], null];
+      $t= [false, [], null];
       foreach ($type->signature as $parameter) {
         if ($generic= self::generic($parameter, $components)) {
-          $function[0]= true;
-          $function[1][]= $generic;
+          $t[0]= true;
+          $t[1][]= $generic;
         } else {
-          $function[1][]= $parameter ? $parameter->literal() : 'var';
+          $t[1][]= $parameter ? $parameter->literal() : 'var';
         }
       }
       if ($generic= self::generic($type->returns, $components)) {
-        $function[0]= true;
-        $function[2]= $generic;
+        $t[0]= true;
+        $t[2]= $generic;
       } else {
-        $function[2]= $type->returns ? $type->returns->literal() : 'var';
+        $t[2]= $type->returns ? $type->returns->literal() : 'var';
       }
-      if ($function[0]) return '(function('.implode(', ', $function[1]).'): '.$function[2].')';
+      if ($t[0]) return '(function('.implode(', ', $t[1]).'): '.$t[2].')';
     }
     return null;
   }

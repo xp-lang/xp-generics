@@ -133,6 +133,17 @@ class GenericsTest extends EmittingTest {
   }
 
   #[Test]
+  public function generic_type() {
+    $l= $this->type('class <T><E> { }');
+    $t= $this->type('class <T><E> {
+      public function copy(): '.$l->getName().'<E> { /* Not implemented */ }
+    }');
+
+    $c= Primitive::$STRING;
+    Assert::equals($l->newGenericType([$c]), $t->newGenericType([$c])->getMethod('copy')->getReturnType());
+  }
+
+  #[Test]
   public function generic_array_type() {
     $t= $this->type('class <T><E> {
       public array<E> $elements;
