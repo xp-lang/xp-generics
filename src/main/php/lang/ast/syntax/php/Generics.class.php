@@ -240,6 +240,7 @@ class Generics implements Extension {
       }
       return $node;
     });
+
     $emitter->transform('interface', function($codegen, $node) {
       if ($node->name instanceof IsGeneric) {
         $values= [];
