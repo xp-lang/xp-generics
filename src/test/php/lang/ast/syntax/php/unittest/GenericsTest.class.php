@@ -83,6 +83,19 @@ class GenericsTest extends EmittingTest {
   }
 
   #[Test]
+  public function nullable_generic_function_type() {
+    $t= $this->type('class <T><E> {
+      public function comparing(?function(E, E): int $comparator) { }
+    }');
+
+    $c= Primitive::$STRING;
+    Assert::equals(
+      new Nullable(new FunctionType([$c, $c], Primitive::$INT)),
+      $t->newGenericType([$c])->getMethod('comparing')->getParameter(0)->getType()
+    );
+  }
+
+  #[Test]
   public function generic_return_type() {
     $t= $this->type('class <T><E> {
       public function pop(): ?E { }
