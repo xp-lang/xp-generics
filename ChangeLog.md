@@ -3,6 +3,9 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+* Added support for declaring and implementing generic interfaces
+  (@thekid)
+
 ## 0.2.1 / 2022-11-06
 
 * Adjust to changes in `lang.ast.types.IsGeneric` - @thekid

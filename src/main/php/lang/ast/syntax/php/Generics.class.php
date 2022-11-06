@@ -8,7 +8,7 @@ use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsMap, IsUnion, IsNullable, 
 class Generics implements Extension {
 
   /**
-   * Returns the component name for a given qualified literal
+   * Returns the component name for a given type
    *
    * @param  lang.ast.Type $type
    * @return string
@@ -16,6 +16,21 @@ class Generics implements Extension {
   public static function component($type) {
     $literal= $type->literal();
     return substr($literal, strrpos($literal, '\\') + 1);
+  }
+
+  /**
+   * Returns the component list for a given type list
+   *
+   * @param  lang.ast.Type[] $type
+   * @return string
+   */
+  public static function components($types) {
+    $list= '';
+    foreach ($types as $type) {
+      $literal= $type->literal();
+      $list.= ', '.substr($literal, strrpos($literal, '\\') + 1);
+    }
+    return substr($list, 2);
   }
 
   /**
@@ -125,6 +140,37 @@ class Generics implements Extension {
   }
 
   /**
+   * Process a type
+   *
+   * @param  lang.ast.nodes.TypeDeclaration $type
+   * @param  lang.ast.Node[][] $values
+   * @return lang.ast.nodes.TypeDeclaration
+   */
+  public static function type($type, $values) {
+    $values[]= [
+      new Literal("'self'"),
+      new Literal("'".self::components($type->name->components)."'")
+    ];
+
+    // Attach generic annotation on type with components
+    self::annotate($type, $values);
+
+    // Rewrite property types
+    foreach ($type->properties() as $property) {
+      self::annotate($property, self::property($property, $type->name->components));
+    }
+
+    // Rewrite constructor and method signatures
+    foreach ($type->methods() as $method) {
+      self::annotate($method, self::method($method, $type->name->components));
+    }
+
+    // Rewrite class name to the generic's base type
+    $type->name= $type->name->base;
+    return $type;
+  }
+
+  /**
    * Setup this extension
    * 
    * @param  lang.ast.Language $language
@@ -164,32 +210,32 @@ class Generics implements Extension {
       return $node;
     });
 
-    $types= function($codegen, $node) {
+    $emitter->transform('class', function($codegen, $node) {
       if ($node->name instanceof IsGeneric) {
+        $values= [];
 
-        // Attach generic annotation on type with components
-        self::annotate($node, [[
-          new Literal("'self'"),
-          new Literal("'".implode(', ', array_map([self::class, 'component'], $node->name->components))."'")
-        ]]);
-
-        // Rewrite property types
-        foreach ($node->properties() as $property) {
-          self::annotate($property, self::property($property, $node->name->components));
+        // Rewrite if any of the interfaces is generic
+        $implements= [0, []];
+        foreach ($node->implements as $i => &$interface) {
+          if ($interface instanceof IsGeneric) {
+            $implements[1][]= [null, new Literal("'".self::components($interface->components)."'")];
+            $implements[0]= true;
+            $interface= $interface->base;
+          } else {
+            $implements[1][]= [null, new Literal('null')];
+          }
         }
+        $implements[0] && $values[]= [new Literal("'implements'"), new ArrayLiteral($implements[1])];
 
-        // Rewrite constructor and method signatures
-        foreach ($node->methods() as $method) {
-          self::annotate($method, self::method($method, $node->name->components));
-        }
-
-        // Rewrite class name to the generic's base type
-        $node->name= $node->name->base;
+        return self::type($node, $values);
       }
       return $node;
-    };
-
-    $emitter->transform('class', $types);
-    $emitter->transform('interface', $types);
+    });
+    $emitter->transform('interface', function($codegen, $node) {
+      if ($node->name instanceof IsGeneric) {
+        return self::type($node, []);
+      }
+      return $node;
+    });
   }
 }
