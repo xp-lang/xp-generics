@@ -47,8 +47,8 @@ class Generics implements Extension {
   }
 
   /**
-   * Process a method and return annotation arguments
-   * 
+   * Process a method and returns annotation arguments
+   *
    * @param  lang.ast.nodes.Method $method
    * @param  string[] $components
    * @return lang.ast.Node[][]
@@ -70,6 +70,25 @@ class Generics implements Extension {
     if ($method->signature->returns && ($generic= self::generic($method->signature->returns, $components))) {
       $r[]= [new Literal("'return'"), new Literal("'".$generic."'")];
       $method->signature->returns= null;
+    }
+
+    return $r;
+  }
+
+  /**
+   * Process a property and returns annotation arguments
+   *
+   * @param  lang.ast.nodes.Property $property
+   * @param  string[] $components
+   * @return lang.ast.Node[][]
+   */
+  public static function property($property, $components) {
+    $r= [];
+
+    // Check property type
+    if ($property->type && ($generic= self::generic($property->type, $components))) {
+      $r[]= [new Literal("'var'"), new Literal("'".$generic."'")];
+      $property->type= null;
     }
 
     return $r;
@@ -123,6 +142,11 @@ class Generics implements Extension {
           new Literal("'self'"),
           new Literal("'".implode(', ', array_map([self::class, 'component'], $node->name->components))."'")
         ]]);
+
+        // Rewrite property types
+        foreach ($node->properties() as $property) {
+          self::annotate($property, self::property($property, $node->name->components));
+        }
 
         // Rewrite constructor and method signatures
         foreach ($node->methods() as $method) {

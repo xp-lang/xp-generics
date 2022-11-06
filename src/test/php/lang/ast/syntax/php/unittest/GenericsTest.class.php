@@ -1,7 +1,7 @@
 <?php namespace lang\ast\syntax\php\unittest;
 
 use lang\ast\unittest\emit\EmittingTest;
-use lang\{Primitive, IllegalArgumentException};
+use lang\{Primitive, Nullable, ArrayType, IllegalArgumentException};
 use unittest\{Assert, Test};
 
 class GenericsTest extends EmittingTest {
@@ -44,6 +44,36 @@ class GenericsTest extends EmittingTest {
       }
     }');
     Assert::true(typeof($r)->isGeneric());
+  }
+
+  #[Test]
+  public function generic_parameter_type() {
+    $t= $this->type('class <T><E> {
+      public function push(E $element) { }
+    }');
+
+    $c= Primitive::$STRING;
+    Assert::equals($c, $t->newGenericType([$c])->getMethod('push')->getParameter(0)->getType());
+  }
+
+  #[Test]
+  public function generic_return_type() {
+    $t= $this->type('class <T><E> {
+      public function pop(): ?E { }
+    }');
+
+    $c= Primitive::$STRING;
+    Assert::equals(new Nullable($c), $t->newGenericType([$c])->getMethod('pop')->getReturnType());
+  }
+
+  #[Test]
+  public function generic_property_type() {
+    $t= $this->type('class <T><E> {
+      public array<E> $elements;
+    }');
+
+    $c= Primitive::$STRING;
+    Assert::equals(new ArrayType($c), $t->newGenericType([$c])->getField('elements')->getType());
   }
 
   #[Test]
