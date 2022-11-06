@@ -46,6 +46,24 @@ class GenericsTest extends EmittingTest {
   }
 
   #[Test]
+  public function extends_generic_base_class() {
+    $i= $this->type('abstract class <T><E> { }');
+    $t= $this->type('class <T><E> extends '.$i->getName().'<E> { }');
+
+    $c= Primitive::$STRING;
+    Assert::equals([$c], $t->newGenericType([$c])->getParentclass()->genericArguments());
+  }
+
+  #[Test]
+  public function extends_generic_interface() {
+    $i= $this->type('interface <T><E> { }');
+    $t= $this->type('interface <T><E> extends '.$i->getName().'<E> { }');
+
+    $c= Primitive::$STRING;
+    Assert::equals([$c], $t->newGenericType([$c])->getInterfaces()[0]->genericArguments());
+  }
+
+  #[Test]
   public function new_creates_generic_types() {
     $r= $this->run('class <T><E> {
       public function run() {

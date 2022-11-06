@@ -214,6 +214,15 @@ class Generics implements Extension {
       if ($node->name instanceof IsGeneric) {
         $values= [];
 
+        // Rewrite if parent class is generic
+        if ($node->parent instanceof IsGeneric) {
+          $values[]= [
+            new Literal("'parent'"),
+            new Literal("'".self::components($node->parent->components)."'")
+          ];
+          $node->parent= $node->parent->base;
+        }
+
         // Rewrite if any of the interfaces is generic
         $implements= [0, []];
         foreach ($node->implements as $i => &$interface) {
@@ -233,7 +242,22 @@ class Generics implements Extension {
     });
     $emitter->transform('interface', function($codegen, $node) {
       if ($node->name instanceof IsGeneric) {
-        return self::type($node, []);
+        $values= [];
+
+        // Rewrite if any of the parent interfaces is generic
+        $implements= [0, []];
+        foreach ($node->parents as $i => &$interface) {
+          if ($interface instanceof IsGeneric) {
+            $implements[1][]= [null, new Literal("'".self::components($interface->components)."'")];
+            $implements[0]= true;
+            $interface= $interface->base;
+          } else {
+            $implements[1][]= [null, new Literal('null')];
+          }
+        }
+        $implements[0] && $values[]= [new Literal("'extends'"), new ArrayLiteral($implements[1])];
+
+        return self::type($node, $values);
       }
       return $node;
     });

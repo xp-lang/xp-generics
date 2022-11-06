@@ -3,6 +3,9 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+* Supported extending from generic base classes / parent interfaces
+  Requires https://github.com/xp-framework/core/releases/tag/v11.4.6
+  (@thekid)
 * Added support for declaring and implementing generic interfaces
   (@thekid)
 
