@@ -3,6 +3,10 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 0.3.1 / 2022-11-06
+
+* Fixed support for referencing other generic value types - @thekid
+
 ## 0.3.0 / 2022-11-06
 
 * Supported extending from generic base classes / parent interfaces
