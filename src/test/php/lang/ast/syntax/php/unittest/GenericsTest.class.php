@@ -1,7 +1,7 @@
 <?php namespace lang\ast\syntax\php\unittest;
 
 use lang\ast\unittest\emit\EmittingTest;
-use lang\{Primitive, Nullable, ArrayType, IllegalArgumentException};
+use lang\{Primitive, Nullable, ArrayType, MapType, IllegalArgumentException};
 use unittest\{Assert, Test};
 
 class GenericsTest extends EmittingTest {
@@ -67,13 +67,24 @@ class GenericsTest extends EmittingTest {
   }
 
   #[Test]
-  public function generic_property_type() {
+  public function generic_array_type() {
     $t= $this->type('class <T><E> {
       public array<E> $elements;
     }');
 
     $c= Primitive::$STRING;
     Assert::equals(new ArrayType($c), $t->newGenericType([$c])->getField('elements')->getType());
+  }
+
+  #[Test]
+  public function generic_map_type() {
+    $t= $this->type('class <T><K, V> {
+      public array<K, V> $pairs;
+    }');
+
+    $k= Primitive::$STRING;
+    $v= Primitive::$INT;
+    Assert::equals(new MapType($v), $t->newGenericType([$k, $v])->getField('pairs')->getType());
   }
 
   #[Test]

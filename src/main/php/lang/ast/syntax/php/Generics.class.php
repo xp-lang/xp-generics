@@ -3,7 +3,7 @@
 use lang\ast\Code;
 use lang\ast\nodes\{Annotation, ArrayLiteral, Literal, InstanceExpression, InvokeExpression, ScopeExpression};
 use lang\ast\syntax\Extension;
-use lang\ast\types\{IsArray, IsGeneric, IsValue, IsNullable};
+use lang\ast\types\{IsArray, IsGeneric, IsMap, IsNullable, IsValue};
 
 class Generics implements Extension {
 
@@ -32,6 +32,8 @@ class Generics implements Extension {
       if ($generic= self::generic($type->element, $components)) return '?'.$generic;
     } else if ($type instanceof IsArray) {
       if ($generic= self::generic($type->component, $components)) return $generic.'[]';
+    } else if ($type instanceof IsMap) {
+      if ($generic= self::generic($type->value, $components)) return '[:'.$generic.']';
     }
     return null;
   }
