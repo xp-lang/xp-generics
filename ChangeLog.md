@@ -3,6 +3,12 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 0.2.0 / 2022-11-06
+
+* Added support for generic function types such as `function(T, T): int`.
+  Requires https://github.com/xp-framework/core/releases/tag/v11.4.5
+  (@thekid)
+
 ## 0.1.0 / 2022-11-06
 
 * Hello World! First release - @thekid
