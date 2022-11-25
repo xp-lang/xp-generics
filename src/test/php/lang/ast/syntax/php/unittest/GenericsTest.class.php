@@ -227,4 +227,32 @@ class GenericsTest extends EmittingTest {
       }
     }');
   }
+
+  #[Test]
+  public function generic_cast() {
+    $t= $this->type('class <T><K, V> {
+      public static function fixture($arg) {
+        return (V)$arg;
+      }
+    }');
+
+    Assert::equals('1', $t->newGenericType([Primitive::$INT, Primitive::$STRING])
+      ->getMethod('fixture')
+      ->invoke(null, [1])
+    );
+  }
+
+  #[Test]
+  public function array_cast() {
+    $t= $this->type('class <T><K, V> {
+      public static function fixture($arg) {
+        return (array)$arg;
+      }
+    }');
+
+    Assert::equals([1], $t->newGenericType([Primitive::$INT, Primitive::$STRING])
+      ->getMethod('fixture')
+      ->invoke(null, [1])
+    );
+  }
 }

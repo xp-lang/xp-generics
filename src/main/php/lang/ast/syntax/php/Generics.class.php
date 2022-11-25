@@ -1,7 +1,15 @@
 <?php namespace lang\ast\syntax\php;
 
 use lang\ast\Code;
-use lang\ast\nodes\{Annotation, ArrayLiteral, Literal, InstanceExpression, InvokeExpression, ScopeExpression};
+use lang\ast\nodes\{
+  Annotation,
+  ArrayLiteral,
+  Literal,
+  InstanceExpression,
+  InvokeExpression,
+  ScopeExpression,
+  TernaryExpression
+};
 use lang\ast\syntax\Extension;
 use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsMap, IsUnion, IsNullable, IsValue};
 
@@ -265,6 +273,25 @@ class Generics implements Extension {
         return self::type($node, $values);
       }
       return $node;
+    });
+
+    $emitter->transform('cast', function($codegen, $node) {
+      $t= $codegen->symbol();
+      $p= $codegen->symbol();
+      $l= $node->type->literal();
+
+      // See https://github.com/xp-lang/xp-generics/issues/2#issuecomment-1327357432
+      return new TernaryExpression(
+        new Code(
+          '($'.$t.'= \xp::$meta[\xp::$cn[self::class]]["class"][DETAIL_GENERIC] ?? null) && '.
+          '(false !== $'.$p.'= array_search('.
+            '"'.substr($l, 1).'",'.
+            'preg_split("/, ?/", \xp::$meta[$'.$t.'[0]]["class"][DETAIL_ANNOTATIONS]["generic"]["self"])'.
+          '))'
+        ),
+        new InvokeExpression(new Code('$'.$t.'[1][$'.$p.']->cast'), [$node->expression], $node->line),
+        new InvokeExpression(new Literal('cast'), [$node->expression, new Literal("'".$l."'")], $node->line)
+      );
     });
   }
 }
