@@ -46,13 +46,15 @@ class Generics implements Extension {
    *
    * @param  lang.ast.Type[] $list
    * @param  lang.ast.Type[] $components
+   * @param  string $prefix
+   * @param  string $suffix
    * @return ?string
    */
-  private static function generics($list, $components) {
+  private static function generics($list, $components, $prefix= '', $suffix= '') {
     $contained= false;
     $generics= [];
     foreach ($list as $type) {
-      if ($generic= self::generic($type, $components)) {
+      if ($generic= self::generic($type, $components, $prefix, $suffix)) {
         $contained= true;
         $generics[]= $generic;
       } else {
@@ -67,25 +69,27 @@ class Generics implements Extension {
    *
    * @param  lang.ast.Type $type
    * @param  lang.ast.Type[] $components
+   * @param  string $prefix
+   * @param  string $suffix
    * @return ?string
    */
-  private static function generic($type, $components) {
+  private static function generic($type, $components, $prefix= '', $suffix= '') {
     if ($type instanceof IsValue && in_array($type, $components)) {
-      return self::component($type);
+      return $prefix.self::component($type).$suffix;
     } else if ($type instanceof IsNullable) {
-      if ($generic= self::generic($type->element, $components)) return '?'.$generic;
+      if ($generic= self::generic($type->element, $components, $prefix, $suffix)) return '?'.$generic;
     } else if ($type instanceof IsArray) {
-      if ($generic= self::generic($type->component, $components)) return $generic.'[]';
+      if ($generic= self::generic($type->component, $components, $prefix, $suffix)) return $generic.'[]';
     } else if ($type instanceof IsMap) {
-      if ($generic= self::generic($type->value, $components)) return '[:'.$generic.']';
+      if ($generic= self::generic($type->value, $components, $prefix, $suffix)) return '[:'.$generic.']';
     } else if ($type instanceof IsUnion) {
-      if ($generic= self::generics($type->components, $components)) return implode('|', $generic);
+      if ($generic= self::generics($type->components, $components, $prefix, $suffix)) return implode('|', $generic);
     } else if ($type instanceof IsGeneric) {
-      if ($generic= self::generics($type->components, $components)) {
+      if ($generic= self::generics($type->components, $components, $prefix, $suffix)) {
         return $type->base->name().'<'.implode(', ', $generic).'>';
       }
     } else if ($type instanceof IsFunction) {
-      if ($generic= self::generics(array_merge([$type->returns], $type->signature), $components)) {
+      if ($generic= self::generics(array_merge([$type->returns], $type->signature), $components, $prefix, $suffix)) {
         $return= array_shift($generic);
         return '(function('.implode(', ', $generic).'): '.$return.')';
       }
@@ -177,8 +181,8 @@ class Generics implements Extension {
       self::annotate($method, self::method($method, $type->name->components));
     }
 
-    // Rewrite class name to the generic's base type
-    $type->name= $type->name->base;
+    // Ensure class name is emitted as its base type
+    $type->name= new IsGenericDeclaration($type->name);
     return $type;
   }
 
@@ -276,22 +280,16 @@ class Generics implements Extension {
     });
 
     $emitter->transform('cast', function($codegen, $node) {
-      $t= $codegen->symbol();
-      $p= $codegen->symbol();
-      $l= $node->type->literal();
-
-      // See https://github.com/xp-lang/xp-generics/issues/2#issuecomment-1327357432
-      return new TernaryExpression(
-        new Code(
-          '($'.$t.'= \xp::$meta[\xp::$cn[self::class]]["class"][DETAIL_GENERIC] ?? null) && '.
-          '(false !== $'.$p.'= array_search('.
-            '"'.substr($l, 1).'",'.
-            'preg_split("/, ?/", \xp::$meta[$'.$t.'[0]]["class"][DETAIL_ANNOTATIONS]["generic"]["self"])'.
-          '))'
-        ),
-        new InvokeExpression(new Code('$'.$t.'[1][$'.$p.']->cast'), [$node->expression], $node->line),
-        new InvokeExpression(new Literal('cast'), [$node->expression, new Literal("'".$l."'")], $node->line)
-      );
+      if ($codegen->context[0]->type->name instanceof IsGenericDeclaration) {
+        if ($generic= self::generic($node->type, $codegen->context[0]->type->name->components(), '{$_G[\'', '\']}')) {
+          return new TernaryExpression(
+            new Code('($_G ?? $_G= self::$__generic)'),
+            new InvokeExpression(new Literal('cast'), [$node->expression, new Literal('"'.$generic.'"')]),
+            new Literal('null')
+          );
+        }
+      }
+      return $node;
     });
   }
 }
