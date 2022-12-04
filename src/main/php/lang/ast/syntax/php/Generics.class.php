@@ -280,8 +280,8 @@ class Generics implements Extension {
     });
 
     $emitter->transform('cast', function($codegen, $node) {
-      if ($codegen->context[0]->type->name instanceof IsGenericDeclaration) {
-        if ($generic= self::generic($node->type, $codegen->context[0]->type->name->components(), '{$_G[\'', '\']}')) {
+      if ($codegen->scope[0]->type->name instanceof IsGenericDeclaration) {
+        if ($generic= self::generic($node->type, $codegen->scope[0]->type->name->components(), '{$_G[\'', '\']}')) {
           return new TernaryExpression(
             new Code('($_G ?? $_G= self::$__generic)'),
             new InvokeExpression(new Literal('cast'), [$node->expression, new Literal('"'.$generic.'"')]),
