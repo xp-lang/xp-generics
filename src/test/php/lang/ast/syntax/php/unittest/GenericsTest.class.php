@@ -1,10 +1,27 @@
 <?php namespace lang\ast\syntax\php\unittest;
 
 use lang\ast\unittest\emit\EmittingTest;
+use lang\reflect\TargetInvocationException;
 use lang\{Primitive, Nullable, ArrayType, MapType, TypeUnion, FunctionType, IllegalArgumentException};
 use unittest\{Assert, Test, Values};
 
 class GenericsTest extends EmittingTest {
+
+  /**
+   * Invokes static fixture method with the given arguments. Unwraps
+   * any exception thrown from `TargetInvocationException`.
+   *
+   * @param  lang.XPClass $type
+   * @param  var[] $arguments
+   * @return var
+   */
+  private function invokeFixture($type, $arguments= []) {
+    try {
+      return $type->getMethod('fixture')->invoke(null, $arguments);
+    } catch (TargetInvocationException $e) {
+      throw $e->getCause();
+    }
+  }
 
   #[Test, Values(['class <T><E> { }', 'interface <T><E> { }'])]
   public function is_generic_definition($declaration) {
@@ -226,5 +243,61 @@ class GenericsTest extends EmittingTest {
         return new self<string>()->comparing(fn(int $a, int $b): int => $a <=> $b);
       }
     }');
+  }
+
+  #[Test]
+  public function regular_cast() {
+    $t= $this->type('class <T><K, V> {
+      public static function fixture($arg) {
+        return (array)$arg;
+      }
+    }');
+
+    Assert::equals([1], $this->invokeFixture(
+      $t->newGenericType([Primitive::$INT, Primitive::$STRING]),
+      [1])
+    );
+  }
+
+  #[Test]
+  public function generic_cast() {
+    $t= $this->type('class <T><K, V> {
+      public static function fixture($arg) {
+        return (V)$arg;
+      }
+    }');
+
+    Assert::equals('1', $this->invokeFixture(
+      $t->newGenericType([Primitive::$INT, Primitive::$STRING]),
+      [1])
+    );
+  }
+
+  #[Test]
+  public function generic_array_cast() {
+    $t= $this->type('class <T><K, V> {
+      public static function fixture($arg) {
+        return (array<V>)$arg;
+      }
+    }');
+
+    Assert::equals(['1', '2', '3'], $this->invokeFixture(
+      $t->newGenericType([Primitive::$INT, Primitive::$STRING]),
+      [[1, 2, '3']])
+    );
+  }
+
+  #[Test, Values([[1, '1'], ['1', '1'], [null, null]])]
+  public function generic_nullable_cast($value, $expected) {
+    $t= $this->type('class <T><K, V> {
+      public static function fixture($arg) {
+        return (?V)$arg;
+      }
+    }');
+
+    Assert::equals($expected, $this->invokeFixture(
+      $t->newGenericType([Primitive::$INT, Primitive::$STRING]),
+      [$value])
+    );
   }
 }
