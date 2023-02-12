@@ -1,7 +1,15 @@
 <?php namespace lang\ast\syntax\php;
 
 use lang\ast\Code;
-use lang\ast\nodes\{Annotation, ArrayLiteral, Literal, InstanceExpression, InvokeExpression, ScopeExpression};
+use lang\ast\nodes\{
+  Annotation,
+  ArrayLiteral,
+  InstanceExpression,
+  InvokeExpression,
+  Literal,
+  NewExpression,
+  ScopeExpression
+};
 use lang\ast\syntax\Extension;
 use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsMap, IsUnion, IsNullable, IsValue};
 
@@ -242,6 +250,32 @@ class Generics implements Extension {
 
         return self::type($node, $values);
       }
+
+      // Extend generic parent with type arguments. Ensure parent class
+      // is created via newGenericType() before extending it.
+      if ($node->parent instanceof IsGeneric) {
+        $typeargs= [];
+        foreach ($node->parent->components as $type) {
+          $typeargs[]= [null, new InvokeExpression(
+            new ScopeExpression('\\lang\\Type', new Literal('forName')),
+            [new Literal("'".$type->literal()."'")]
+          )];
+        }
+        return [
+          new InvokeExpression(
+            new InstanceExpression(
+              new NewExpression(
+                new IsValue('\\lang\\XPClass'),
+                [new ScopeExpression($node->parent->base->literal(), new Literal('class'))]
+              ),
+              new Literal('newGenericType')
+            ),
+            [new ArrayLiteral($typeargs)]
+          ),
+          $node
+        ];
+      }
+
       return $node;
     });
 
