@@ -1,8 +1,8 @@
 <?php namespace lang\ast\syntax\php\unittest;
 
 use lang\ast\unittest\emit\EmittingTest;
-use lang\{Primitive, Nullable, ArrayType, MapType, TypeUnion, FunctionType, IllegalArgumentException};
-use unittest\{Assert, Test, Values};
+use lang\{ArrayType, FunctionType, IllegalArgumentException, MapType, Nullable, Primitive, TypeUnion};
+use test\{Assert, Expect, Test, Values};
 
 class GenericsTest extends EmittingTest {
 
@@ -207,7 +207,7 @@ class GenericsTest extends EmittingTest {
     Assert::equals(['A', 'B'], $r->remaining());
   }
 
-  #[Test, Expect(class: IllegalArgumentException::class, withMessage: '/Argument 1 .+ must be of string, int given/')]
+  #[Test, Expect(class: IllegalArgumentException::class, message: '/Argument 1 .+ must be of string, int given/')]
   public function incorrect_parameter_type() {
     $this->run('class <T><E> {
       public function push(E $element) { /* Never run */ }
@@ -218,7 +218,7 @@ class GenericsTest extends EmittingTest {
     }');
   }
 
-  #[Test, Expect(class: IllegalArgumentException::class, withMessage: '/Vararg 1 .+ must be of string.*, var.* given/')]
+  #[Test, Expect(class: IllegalArgumentException::class, message: '/Vararg 1 .+ must be of string.*, var.* given/')]
   public function incorrect_variadic_parameter_type() {
     $this->run('class <T><E> {
       public function push(E... $elements) { /* Never run */ }
@@ -229,7 +229,7 @@ class GenericsTest extends EmittingTest {
     }');
   }
 
-  #[Test, Expect(class: IllegalArgumentException::class, withMessage: '/Argument 1 .+ must be of .+, .+ given/')]
+  #[Test, Expect(class: IllegalArgumentException::class, message: '/Argument 1 .+ must be of .+, .+ given/')]
   public function incorrect_function_type() {
     $this->run('class <T><E> {
       public function comparing(function(E, E): int $comparator) { /* Never run */ }
