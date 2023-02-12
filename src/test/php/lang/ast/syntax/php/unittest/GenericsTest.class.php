@@ -64,6 +64,18 @@ class GenericsTest extends EmittingTest {
   }
 
   #[Test]
+  public function extends_generic_parent_with_type_argument() {
+    $i= $this->type('abstract class <T><E> {
+      public function defaultValue(): E { return $E->default; }
+    }');
+    $t= $this->type('class <T> extends '.$i->getName().'<string> { }');
+
+    $c= Primitive::$STRING;
+    Assert::equals([$c], $t->getParentclass()->genericArguments());
+    Assert::equals('', $t->newInstance()->defaultValue());
+  }
+
+  #[Test]
   public function new_creates_generic_types() {
     $r= $this->run('class <T><E> {
       public function run() {
