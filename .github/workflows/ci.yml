@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-versions: ['7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2']
+        php-versions: ['7.0', '7.1', '7.2', '7.3', '7.4', '8.0', '8.1', '8.2', '8.3']
         os: [ubuntu-latest, windows-latest]
 
     steps:
@@ -31,9 +31,6 @@ jobs:
       with:
         php-version: ${{ matrix.php-versions }}
         ini-values: date.timezone=Europe/Berlin
-
-    - name: Setup Problem Matchers for PHP
-      run: echo "::add-matcher::${{ runner.tool_cache }}/php.json"
 
     - name: Validate composer.json and composer.lock
       run: composer validate
@@ -58,4 +55,4 @@ jobs:
         echo "vendor/xp-framework/compiler/src/test/php" >> composer.pth
 
     - name: Run test suite
-      run: sh xp-run xp.unittest.TestRunner src/test/php
+      run: sh xp-run xp.test.Runner src/test/php
