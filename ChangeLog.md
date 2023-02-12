@@ -3,6 +3,11 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 0.5.0 / 2023-02-12
+
+* Migrated to new test framework, see xp-framework/rfc#344 - @thekid
+* Merged PR #5: Extend generic parent with type arguments - @thekid
+
 ## 0.4.0 / 2022-11-07
 
 * Use release version of `xp-framework/compiler` - @thekid

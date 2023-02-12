@@ -46,7 +46,7 @@ class Generics implements Extension {
    *
    * @param  lang.ast.Type[] $list
    * @param  lang.ast.Type[] $components
-   * @return ?string
+   * @return ?string[]
    */
   private static function generics($list, $components) {
     $contained= false;
@@ -177,8 +177,6 @@ class Generics implements Extension {
       self::annotate($method, self::method($method, $type->name->components));
     }
 
-    // Rewrite class name to the generic's base type
-    $type->name= $type->name->base;
     return $type;
   }
 
