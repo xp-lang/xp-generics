@@ -262,9 +262,9 @@ class Generics implements Extension {
         return [
           new InvokeExpression(
             new InstanceExpression(
-              new NewExpression(
-                new IsValue('\\lang\\XPClass'),
-                [new ScopeExpression($node->parent->base->literal(), new Literal('class'))]
+              new InvokeExpression(
+                new ScopeExpression('\\lang\\XPClass', new Literal('forName')),
+                [new Literal("'".$node->parent->base->literal()."'")]
               ),
               new Literal('newGenericType')
             ),

@@ -3,6 +3,12 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 0.5.1 / 2023-07-27
+
+* Fixed error *Class ... is not a generic definition* when parent class
+  was not previously loaded
+  (@thekid)
+
 ## 0.5.0 / 2023-02-12
 
 * Migrated to new test framework, see xp-framework/rfc#344 - @thekid
