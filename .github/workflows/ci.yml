@@ -37,7 +37,6 @@ jobs:
 
     - name: Get Composer Cache Directory
       id: composer-cache
-      # run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
       run: echo "::set-output name=dir::$(composer config cache-files-dir)"
 
     - name: Cache dependencies
@@ -55,4 +54,4 @@ jobs:
         echo "vendor/xp-framework/compiler/src/test/php" >> composer.pth
 
     - name: Run test suite
-      run: sh xp-run xp.test.Runner src/test/php
+      run: sh xp-run xp.test.Runner -r Dots src/test/php
