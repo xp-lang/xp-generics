@@ -6,7 +6,7 @@ use test\{Assert, Expect, Test, Values};
 
 class GenericsTest extends EmittingTest {
 
-  #[Test, Values(['class <T><E> { }', 'interface <T><E> { }'])]
+  #[Test, Values(['class %T<E> { }', 'interface %T<E> { }'])]
   public function is_generic_definition($declaration) {
     $t= $this->type($declaration);
     Assert::true($t->isGenericDefinition());
@@ -14,32 +14,32 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function generic_component() {
-    $t= $this->type('class <T><E> { }');
+    $t= $this->type('class %T<E> { }');
     Assert::equals(['E'], $t->genericComponents());
   }
 
   #[Test]
   public function generic_components() {
-    $t= $this->type('class <T><K, V> { }');
+    $t= $this->type('class %T<K, V> { }');
     Assert::equals(['K', 'V'], $t->genericComponents());
   }
 
   #[Test]
   public function new_generic_type() {
-    $t= $this->type('class <T><E> { }')->newGenericType([Primitive::$STRING]);
+    $t= $this->type('class %T<E> { }')->newGenericType([Primitive::$STRING]);
     Assert::true($t->isGeneric());
   }
 
   #[Test]
   public function generic_arguments() {
-    $t= $this->type('class <T><E> { }')->newGenericType([Primitive::$STRING]);
+    $t= $this->type('class %T<E> { }')->newGenericType([Primitive::$STRING]);
     Assert::equals([Primitive::$STRING], $t->genericArguments());
   }
 
   #[Test]
   public function implements_generic_interface() {
-    $i= $this->type('interface <T><E> { }');
-    $t= $this->type('class <T><E> implements '.$i->getName().'<E> { }');
+    $i= $this->type('interface %T<E> { }');
+    $t= $this->type('class %T<E> implements '.$i->getName().'<E> { }');
 
     $c= Primitive::$STRING;
     Assert::equals([$c], $t->newGenericType([$c])->getInterfaces()[0]->genericArguments());
@@ -47,8 +47,8 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function extends_generic_base_class() {
-    $i= $this->type('abstract class <T><E> { }');
-    $t= $this->type('class <T><E> extends '.$i->getName().'<E> { }');
+    $i= $this->type('abstract class %T<E> { }');
+    $t= $this->type('class %T<E> extends '.$i->getName().'<E> { }');
 
     $c= Primitive::$STRING;
     Assert::equals([$c], $t->newGenericType([$c])->getParentclass()->genericArguments());
@@ -56,8 +56,8 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function extends_generic_interface() {
-    $i= $this->type('interface <T><E> { }');
-    $t= $this->type('interface <T><E> extends '.$i->getName().'<E> { }');
+    $i= $this->type('interface %T<E> { }');
+    $t= $this->type('interface %T<E> extends '.$i->getName().'<E> { }');
 
     $c= Primitive::$STRING;
     Assert::equals([$c], $t->newGenericType([$c])->getInterfaces()[0]->genericArguments());
@@ -65,10 +65,10 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function extends_generic_parent_with_type_argument() {
-    $i= $this->type('abstract class <T><E> {
+    $i= $this->type('abstract class %T<E> {
       public function defaultValue(): E { return $E->default; }
     }');
-    $t= $this->type('class <T> extends '.$i->getName().'<string> { }');
+    $t= $this->type('class %T extends '.$i->getName().'<string> { }');
 
     $c= Primitive::$STRING;
     Assert::equals([$c], $t->getParentclass()->genericArguments());
@@ -77,7 +77,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function new_creates_generic_types() {
-    $r= $this->run('class <T><E> {
+    $r= $this->run('class %T<E> {
       public function run() {
         return new self<string>();
       }
@@ -87,7 +87,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function generic_parameter_type() {
-    $t= $this->type('class <T><E> {
+    $t= $this->type('class %T<E> {
       public function push(E $element) { }
     }');
 
@@ -97,7 +97,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function generic_type_union() {
-    $t= $this->type('class <T><E> {
+    $t= $this->type('class %T<E> {
       public function push(int|E $element) { }
     }');
 
@@ -110,7 +110,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function generic_function_type() {
-    $t= $this->type('class <T><E> {
+    $t= $this->type('class %T<E> {
       public function comparing(function(E, E): int $comparator) { }
     }');
 
@@ -123,7 +123,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function nullable_generic_function_type() {
-    $t= $this->type('class <T><E> {
+    $t= $this->type('class %T<E> {
       public function comparing(?function(E, E): int $comparator) { }
     }');
 
@@ -136,7 +136,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function generic_return_type() {
-    $t= $this->type('class <T><E> {
+    $t= $this->type('class %T<E> {
       public function pop(): ?E { }
     }');
 
@@ -146,8 +146,8 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function generic_type() {
-    $l= $this->type('class <T><E> { }');
-    $t= $this->type('class <T><E> {
+    $l= $this->type('class %T<E> { }');
+    $t= $this->type('class %T<E> {
       public function copy(): '.$l->getName().'<E> { /* Not implemented */ }
     }');
 
@@ -157,7 +157,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function generic_array_type() {
-    $t= $this->type('class <T><E> {
+    $t= $this->type('class %T<E> {
       public array<E> $elements;
     }');
 
@@ -167,7 +167,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function generic_map_type() {
-    $t= $this->type('class <T><K, V> {
+    $t= $this->type('class %T<K, V> {
       public array<K, V> $pairs;
     }');
 
@@ -178,7 +178,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function string_queue() {
-    $r= $this->run('class <T><E> {
+    $r= $this->run('class %T<E> {
       private array<E> $elements= [];
 
       public function __construct(E... $elements) {
@@ -209,7 +209,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test, Expect(class: IllegalArgumentException::class, message: '/Argument 1 .+ must be of string, int given/')]
   public function incorrect_parameter_type() {
-    $this->run('class <T><E> {
+    $this->run('class %T<E> {
       public function push(E $element) { /* Never run */ }
 
       public function run() {
@@ -220,7 +220,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test, Expect(class: IllegalArgumentException::class, message: '/Vararg 1 .+ must be of string.*, var.* given/')]
   public function incorrect_variadic_parameter_type() {
-    $this->run('class <T><E> {
+    $this->run('class %T<E> {
       public function push(E... $elements) { /* Never run */ }
 
       public function run() {
@@ -231,7 +231,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test, Expect(class: IllegalArgumentException::class, message: '/Argument 1 .+ must be of .+, .+ given/')]
   public function incorrect_function_type() {
-    $this->run('class <T><E> {
+    $this->run('class %T<E> {
       public function comparing(function(E, E): int $comparator) { /* Never run */ }
 
       public function run() {
