@@ -31,7 +31,7 @@ class PriorityQueue<E> {
     return $this;
   }
 
-  public function push(E $element) {
+  public function push(E $element): void {
     $this->elements[]= $element;
     $this->sorted= false;
   }
