@@ -39,7 +39,7 @@ class GenericsTest extends EmittingTest {
   #[Test]
   public function implements_generic_interface() {
     $i= $this->type('interface %T<E> { }');
-    $t= $this->type('class %T<E> implements '.$i->getName().'<E> { }');
+    $t= $this->type('class %T<E> implements '.$i->literal().'<E> { }');
 
     $c= Primitive::$STRING;
     Assert::equals([$c], $t->newGenericType([$c])->getInterfaces()[0]->genericArguments());
@@ -48,7 +48,7 @@ class GenericsTest extends EmittingTest {
   #[Test]
   public function extends_generic_base_class() {
     $i= $this->type('abstract class %T<E> { }');
-    $t= $this->type('class %T<E> extends '.$i->getName().'<E> { }');
+    $t= $this->type('class %T<E> extends '.$i->literal().'<E> { }');
 
     $c= Primitive::$STRING;
     Assert::equals([$c], $t->newGenericType([$c])->getParentclass()->genericArguments());
@@ -57,7 +57,7 @@ class GenericsTest extends EmittingTest {
   #[Test]
   public function extends_generic_interface() {
     $i= $this->type('interface %T<E> { }');
-    $t= $this->type('interface %T<E> extends '.$i->getName().'<E> { }');
+    $t= $this->type('interface %T<E> extends '.$i->literal().'<E> { }');
 
     $c= Primitive::$STRING;
     Assert::equals([$c], $t->newGenericType([$c])->getInterfaces()[0]->genericArguments());
@@ -68,7 +68,7 @@ class GenericsTest extends EmittingTest {
     $i= $this->type('abstract class %T<E> {
       public function defaultValue(): E { return $E->default; }
     }');
-    $t= $this->type('class %T extends '.$i->getName().'<string> { }');
+    $t= $this->type('class %T extends '.$i->literal().'<string> { }');
 
     $c= Primitive::$STRING;
     Assert::equals([$c], $t->getParentclass()->genericArguments());
