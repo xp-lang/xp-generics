@@ -78,4 +78,22 @@ class CastingTest extends EmittingTest {
       $this->invokeFixture($t->newGenericType([Primitive::$STRING]), [$value])
     );
   }
+
+  #[Test]
+  public function casting_used_for_coercion() {
+    $t= $this->type('class %T<T> {
+      private $begin, $end;
+
+      public function __construct($range) {
+        [$this->begin, $this->end]= (array<T>)$range;
+      }
+
+      public function begin(): T { return $this->begin; }
+
+      public function end(): T { return $this->end; }
+    }');
+
+    $range= $t->newGenericType([Primitive::$INT])->newInstance(['1', '10']);
+    Assert::equals([1, 10], [$range->begin(), $range->end()]);
+  }
 }
