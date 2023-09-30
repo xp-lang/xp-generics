@@ -1,15 +1,15 @@
 <?php namespace lang\ast\syntax\php\unittest;
 
 use lang\ast\unittest\emit\EmittingTest;
-use lang\reflect\TargetInvocationException;
-use lang\{ArrayType, Primitive};
+use lang\reflection\TargetException;
+use lang\{ArrayType, Primitive, Reflection};
 use test\{Assert, Expect, Test, Values};
 
 class CastingTest extends EmittingTest {
 
   /**
    * Invokes static fixture method with the given arguments. Unwraps
-   * any exception thrown from `TargetInvocationException`.
+   * any exception thrown from `TargetException`.
    *
    * @param  lang.XPClass $type
    * @param  var[] $arguments
@@ -17,8 +17,8 @@ class CastingTest extends EmittingTest {
    */
   private function invokeFixture($type, $arguments= []) {
     try {
-      return $type->getMethod('fixture')->invoke(null, $arguments);
-    } catch (TargetInvocationException $e) {
+      return Reflection::type($type)->method('fixture')->invoke(null, $arguments);
+    } catch (TargetException $e) {
       throw $e->getCause();
     }
   }
