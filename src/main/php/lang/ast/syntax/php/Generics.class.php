@@ -20,6 +20,8 @@ use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsMap, IsUnion, IsNullable, 
  * @see   https://github.com/xp-framework/rfc/issues/193
  * @test  lang.ast.syntax.php.unittest.GenericsTest
  * @test  lang.ast.syntax.php.unittest.CastingTest
+ * @test  lang.ast.syntax.php.unittest.PropertiesTest
+ * @test  lang.ast.syntax.php.unittest.MethodsTest
  */
 class Generics implements Extension {
 
