@@ -100,7 +100,7 @@ class MethodsTest extends EmittingTest {
   public function generic_type() {
     $l= $this->type('class %T<E> { }');
     $t= $this->type('class %T<E> {
-      public function copy(): '.$l->getName().'<E> { /* Not implemented */ }
+      public function copy(): '.$l->literal().'<E> { /* Not implemented */ }
     }');
 
     $c= Primitive::$STRING;
