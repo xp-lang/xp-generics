@@ -3,6 +3,10 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 0.6.0 / 2023-09-30
+
+* Merged PR #6: Add support for casts - @thekid
+
 ## 0.5.1 / 2023-07-27
 
 * Fixed error *Class ... is not a generic definition* when parent class
