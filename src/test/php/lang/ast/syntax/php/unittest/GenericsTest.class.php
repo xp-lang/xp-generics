@@ -89,7 +89,7 @@ class GenericsTest extends EmittingTest {
   public function new_component() {
     $t= $this->type('class %T<E> {
       public static function fixture($arg) {
-        return $E->newInstance($arg);
+        return new E($arg);
       }
     }');
     Assert::equals(6100, Reflection::type($t->newGenericType([Primitive::$INT]))
