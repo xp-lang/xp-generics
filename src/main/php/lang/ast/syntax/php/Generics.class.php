@@ -8,7 +8,8 @@ use lang\ast\nodes\{
   InvokeExpression,
   Literal,
   ScopeExpression,
-  TernaryExpression
+  TernaryExpression,
+  Variable
 };
 use lang\ast\syntax\Extension;
 use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsMap, IsUnion, IsNullable, IsValue};
@@ -233,6 +234,51 @@ class Generics implements Extension {
           $node->arguments
         );
       }
+
+      // Rewrite `new T(...)` -> `$T->newInstance(...)` if T is a component
+      if (
+        $node->type instanceof IsValue &&
+        $generic= self::generic($node->type, $codegen->scope[0]->type->name->components())
+      ) {
+        return new InvokeExpression(
+          new InstanceExpression(new Variable($generic), new Literal('newInstance')),
+          $node->arguments
+        );
+      }
+
+      return $node;
+    });
+
+    $emitter->transform('instanceof', function($codegen, $node) {
+
+      // Rewrite `... instanceof T` -> `$T->isInstance(...)` if T is a component
+      if (
+        is_string($node->type) &&
+        $generic= self::generic(new IsValue($node->type), $codegen->scope[0]->type->name->components())
+      ) {
+        return new InvokeExpression(
+          new InstanceExpression(new Variable($generic), new Literal('isInstance')),
+          [$node->expression]
+        );
+      }
+
+      return $node;
+    });
+
+    $emitter->transform('scope', function($codegen, $node) {
+
+      // Rewrite `T::class` to `$T->literal()` if T is a component
+      if (
+        $node->member instanceof Literal &&
+        'class' === $node->member->expression &&
+        $generic= self::generic(new IsValue($node->type), $codegen->scope[0]->type->name->components())
+      ) {
+        return new InvokeExpression(
+          new InstanceExpression(new Variable($generic), new Literal('literal')),
+          []
+        );
+      }
+
       return $node;
     });
 
