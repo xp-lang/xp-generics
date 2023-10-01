@@ -5,7 +5,7 @@ XP generics for PHP - ChangeLog
 
 ## 0.7.0 / 2023-10-01
 
-* Merged PR #8: Add support for components type literals - @thekid
+* Merged PR #8: Add support for component type literals - @thekid
 * Merged PR #7: Use new reflection API in tests - @thekid
 
 ## 0.6.0 / 2023-09-30
