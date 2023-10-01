@@ -237,8 +237,9 @@ class Generics implements Extension {
 
       // Rewrite `new T(...)` -> `$T->newInstance(...)` if T is a component
       if (
+        ($name= $codegen->scope[0]->type->name ?? null) instanceof IsGenericDeclaration &&
         $node->type instanceof IsValue &&
-        $generic= self::generic($node->type, $codegen->scope[0]->type->name->components())
+        $generic= self::generic($node->type, $name->components())
       ) {
         return new InvokeExpression(
           new InstanceExpression(new Variable($generic), new Literal('newInstance')),
@@ -253,8 +254,9 @@ class Generics implements Extension {
 
       // Rewrite `... instanceof T` -> `$T->isInstance(...)` if T is a component
       if (
+        ($name= $codegen->scope[0]->type->name ?? null) instanceof IsGenericDeclaration &&
         is_string($node->type) &&
-        $generic= self::generic(new IsValue($node->type), $codegen->scope[0]->type->name->components())
+        $generic= self::generic(new IsValue($node->type), $name->components())
       ) {
         return new InvokeExpression(
           new InstanceExpression(new Variable($generic), new Literal('isInstance')),
@@ -269,9 +271,10 @@ class Generics implements Extension {
 
       // Rewrite `T::class` to `$T->literal()` if T is a component
       if (
+        ($name= $codegen->scope[0]->type->name ?? null) instanceof IsGenericDeclaration &&
         $node->member instanceof Literal &&
         'class' === $node->member->expression &&
-        $generic= self::generic(new IsValue($node->type), $codegen->scope[0]->type->name->components())
+        $generic= self::generic(new IsValue($node->type), $name->components())
       ) {
         return new InvokeExpression(
           new InstanceExpression(new Variable($generic), new Literal('literal')),
