@@ -112,6 +112,19 @@ class GenericsTest extends EmittingTest {
   }
 
   #[Test]
+  public function component_class() {
+    $t= $this->type('class %T<E> {
+      public static function fixture() {
+        return E::class;
+      }
+    }');
+    Assert::equals(self::class, Reflection::type($t->newGenericType([new XPClass(self::class)]))
+      ->method('fixture')
+      ->invoke(null, [])
+    );
+  }
+
+  #[Test]
   public function string_queue() {
     $r= $this->run('class %T<E> {
       private array<E> $elements= [];

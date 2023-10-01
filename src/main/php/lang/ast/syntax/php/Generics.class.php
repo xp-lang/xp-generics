@@ -262,6 +262,22 @@ class Generics implements Extension {
       return $node;
     });
 
+    $emitter->transform('scope', function($codegen, $node) {
+
+      // Rewrite `T::class` to `$T->literal()` if T is a component
+      if (
+        $node->member instanceof Literal &&
+        'class' === $node->member->expression &&
+        $generic= self::generic(new IsValue($node->type), $codegen->scope[0]->type->name->components())
+      ) {
+        return new InvokeExpression(
+          new InstanceExpression(new Variable($generic), new Literal('literal')),
+          []
+        );
+      }
+      return $node;
+    });
+
     $emitter->transform('class', function($codegen, $node) {
       if ($node->name instanceof IsGeneric) {
         $values= [];
