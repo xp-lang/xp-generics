@@ -3,6 +3,8 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+* Merged PR #7: Use new reflection API in tests - @thekid
+
 ## 0.6.0 / 2023-09-30
 
 * Merged PR #6: Add support for casts - @thekid
