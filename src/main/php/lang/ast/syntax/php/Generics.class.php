@@ -252,7 +252,10 @@ class Generics implements Extension {
     $emitter->transform('instanceof', function($codegen, $node) {
 
       // Rewrite `... instanceof T` -> `$T->isInstance(...)` if T is a component
-      if ($generic= self::generic(new IsValue($node->type), $codegen->scope[0]->type->name->components())) {
+      if (
+        is_string($node->type) &&
+        $generic= self::generic(new IsValue($node->type), $codegen->scope[0]->type->name->components())
+      ) {
         return new InvokeExpression(
           new InstanceExpression(new Variable($generic), new Literal('isInstance')),
           [$node->expression]
@@ -275,6 +278,7 @@ class Generics implements Extension {
           []
         );
       }
+
       return $node;
     });
 
