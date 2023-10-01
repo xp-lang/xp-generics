@@ -1,7 +1,7 @@
 <?php namespace lang\ast\syntax\php\unittest;
 
 use lang\ast\unittest\emit\EmittingTest;
-use lang\{ArrayType, MapType, Primitive, Reflection};
+use lang\{ArrayType, MapType, Primitive, Reflection, XPClass};
 use test\{Assert, Test, Values};
 
 class GenericsTest extends EmittingTest {
@@ -95,6 +95,19 @@ class GenericsTest extends EmittingTest {
     Assert::equals(6100, Reflection::type($t->newGenericType([Primitive::$INT]))
       ->method('fixture')
       ->invoke(null, ['6100'])
+    );
+  }
+
+  #[Test]
+  public function instanceof_component() {
+    $t= $this->type('class %T<E> {
+      public static function fixture($arg) {
+        return $arg instanceof E;
+      }
+    }');
+    Assert::equals(true, Reflection::type($t->newGenericType([new XPClass(self::class)]))
+      ->method('fixture')
+      ->invoke(null, [$this])
     );
   }
 
