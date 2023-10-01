@@ -12,7 +12,8 @@
     "php" : ">=7.0.0"
   },
   "require-dev" : {
-    "xp-framework/test": "^1.0"
+    "xp-framework/test": "^1.0",
+    "xp-framework/reflection": "^2.14"
   },
   "autoload" : {
     "files" : ["src/main/php/autoload.php"]
