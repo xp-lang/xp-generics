@@ -3,6 +3,8 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+* Added PHP 8.4 to the test matrix - @thekid
+
 ## 0.7.0 / 2023-10-01
 
 * Merged PR #8: Add support for component type literals - @thekid
