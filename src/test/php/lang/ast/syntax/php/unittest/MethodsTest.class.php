@@ -9,7 +9,9 @@ use lang\{
   Nullable,
   Primitive,
   Reflection,
-  TypeUnion
+  TypeUnion,
+  Wildcard,
+  WildcardType
 };
 use test\{Assert, Expect, Test};
 
@@ -138,5 +140,18 @@ class MethodsTest extends EmittingTest {
         return new self<string>()->comparing(fn(int $a, int $b): int => $a <=> $b);
       }
     }');
+  }
+
+  #[Test]
+  public function generic_type_inside_non_generic_class() {
+    $q= $this->type('class %T<E> { }');
+    $t= $this->type('class %T {
+      public function all('.$q->getName().'<?> $queue): iterable { /* Not implemented */ }
+    }');
+
+    Assert::equals(
+      new WildcardType($q, [Wildcard::$ANY]),
+      $t->getMethod('all')->getParameter(0)->getType()
+    );
   }
 }
