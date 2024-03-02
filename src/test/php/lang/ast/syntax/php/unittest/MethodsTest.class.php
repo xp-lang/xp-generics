@@ -146,7 +146,7 @@ class MethodsTest extends EmittingTest {
   public function generic_type_inside_non_generic_class() {
     $q= $this->type('class %T<E> { }');
     $t= $this->type('class %T {
-      public function all('.$q->getName().'<?> $queue): iterable { /* Not implemented */ }
+      public function all('.$q->literal().'<?> $queue): iterable { /* Not implemented */ }
     }');
 
     Assert::equals(
