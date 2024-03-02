@@ -3,6 +3,8 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 1.0.0 / 2024-03-02
+
 * Added PHP 8.4 to the test matrix - @thekid
 
 ## 0.7.0 / 2023-10-01
