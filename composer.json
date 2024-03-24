@@ -7,13 +7,13 @@
   "keywords": ["language", "module", "xp"],
   "minimum-stability": "dev",
   "require" : {
-    "xp-framework/core": "^11.4",
-    "xp-framework/compiler": "^8.8",
-    "php" : ">=7.0.0"
+    "xp-framework/core": "^12.0 | ^11.4",
+    "xp-framework/compiler": "^9.0 | ^8.8",
+    "php" : ">=7.4.0"
   },
   "require-dev" : {
-    "xp-framework/test": "^1.0",
-    "xp-framework/reflection": "^2.14"
+    "xp-framework/test": "^2.0 | ^1.0",
+    "xp-framework/reflection": "^3.0 | ^2.14"
   },
   "autoload" : {
     "files" : ["src/main/php/autoload.php"]
