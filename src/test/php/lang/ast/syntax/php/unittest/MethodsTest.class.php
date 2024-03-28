@@ -144,14 +144,14 @@ class MethodsTest extends EmittingTest {
 
   #[Test]
   public function generic_type_inside_non_generic_class() {
-    $q= $this->type('class %T<E> { }');
-    $t= $this->type('class %T {
+    $q= $this->declare('class %T<E> { }');
+    $t= $this->declare('class %T {
       public function all('.$q->literal().'<?> $queue): iterable { /* Not implemented */ }
     }');
 
     Assert::equals(
-      new WildcardType($q, [Wildcard::$ANY]),
-      $t->getMethod('all')->getParameter(0)->getType()
+      new WildcardType($q->class(), [Wildcard::$ANY]),
+      $t->method('all')->parameter(0)->constraint()->type()
     );
   }
 }

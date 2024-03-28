@@ -42,7 +42,7 @@ class GenericsTest extends EmittingTest {
     $t= $this->type('class %T<E> implements '.$i->literal().'<E> { }');
 
     $c= Primitive::$STRING;
-    Assert::equals([$c], $t->newGenericType([$c])->getInterfaces()[0]->genericArguments());
+    Assert::equals([$c], Reflection::type($t->newGenericType([$c]))->interfaces()[0]->class()->genericArguments());
   }
 
   #[Test]
@@ -60,7 +60,7 @@ class GenericsTest extends EmittingTest {
     $t= $this->type('interface %T<E> extends '.$i->literal().'<E> { }');
 
     $c= Primitive::$STRING;
-    Assert::equals([$c], $t->newGenericType([$c])->getInterfaces()[0]->genericArguments());
+    Assert::equals([$c], Reflection::type($t->newGenericType([$c]))->interfaces()[0]->class()->genericArguments());
   }
 
   #[Test]
