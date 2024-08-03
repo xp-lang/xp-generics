@@ -2,7 +2,7 @@
 
 use lang\ast\unittest\emit\EmittingTest;
 use lang\reflection\TargetException;
-use lang\{ArrayType, Primitive, Reflection};
+use lang\{ArrayType, TypeUnion, Primitive, Reflection, Runnable, Closeable, XPClass};
 use test\{Assert, Expect, Test, Values};
 
 class CastingTest extends EmittingTest {
@@ -77,6 +77,36 @@ class CastingTest extends EmittingTest {
       Primitive::$STRING->cast($value),
       $this->invokeFixture($t->newGenericType([Primitive::$STRING]), [$value])
     );
+  }
+
+  #[Test, Values([1, '', 'Test'])]
+  public function generic_union_cast($value) {
+    $t= $this->type('class %T<V> {
+      public static function fixture($arg) {
+        return (V|int)$arg;
+      }
+    }');
+
+    Assert::equals(
+      (new TypeUnion([Primitive::$STRING, Primitive::$INT]))->cast($value),
+      $this->invokeFixture($t->newGenericType([Primitive::$STRING]), [$value])
+    );
+  }
+
+  #[Test]
+  public function generic_intersection_cast() {
+    $t= $this->type('use lang\Runnable; class %T<V> {
+      public static function fixture($arg) {
+        return (V&Runnable)$arg;
+      }
+    }');
+    $value= new class() implements Runnable, Closeable {
+      public function run() { }
+      public function close() { }
+    };
+
+    $type= $t->newGenericType([new XPClass(Closeable::class)]);
+    Assert::equals($value, $this->invokeFixture($type, [$value]));
   }
 
   #[Test]

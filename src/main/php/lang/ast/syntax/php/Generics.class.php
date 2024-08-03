@@ -1,6 +1,5 @@
 <?php namespace lang\ast\syntax\php;
 
-use lang\ast\Code;
 use lang\ast\nodes\{
   Annotation,
   ArrayLiteral,
@@ -12,7 +11,8 @@ use lang\ast\nodes\{
   Variable
 };
 use lang\ast\syntax\Extension;
-use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsMap, IsUnion, IsNullable, IsValue};
+use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsIntersection, IsLiteral, IsMap, IsUnion, IsNullable, IsValue};
+use lang\ast\{Type, Code};
 
 /**
  * XP Generics extensions
@@ -25,17 +25,6 @@ use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsMap, IsUnion, IsNullable, 
  * @test  lang.ast.syntax.php.unittest.MethodsTest
  */
 class Generics implements Extension {
-
-  /**
-   * Returns the component name for a given type
-   *
-   * @param  lang.ast.Type $type
-   * @return string
-   */
-  public static function component($type) {
-    $literal= $type->literal();
-    return substr($literal, strrpos($literal, '\\') + 1);
-  }
 
   /**
    * Returns the component list for a given type list
@@ -53,58 +42,86 @@ class Generics implements Extension {
   }
 
   /**
-   * Returns whether a given list contains a generic component
+   * Returns an expression to create a new generic instance from a given type
    *
-   * @param  lang.ast.Type[] $list
-   * @param  lang.ast.Type[] $components
-   * @param  string $prefix
-   * @param  string $suffix
-   * @return ?string
+   * @param  lang.ast.types.IsGeneric $type
+   * @param  ?lang.ast.nodes.TypeDeclaration $enclosing
+   * @param  string
    */
-  private static function generics($list, $components, $prefix= '', $suffix= '') {
-    $contained= false;
-    $generics= [];
-    foreach ($list as $type) {
-      if ($generic= self::generic($type, $components, $prefix, $suffix)) {
-        $contained= true;
-        $generics[]= $generic;
-      } else {
-        $generics[]= $type ? $type->literal() : 'var';
+  public static function typename($type, $enclosing) {
+    if (null === $enclosing || $type instanceof IsLiteral) {
+      return $type->name();
+    } else if ($type instanceof IsGeneric) {
+      $components= '';
+      foreach ($type->components as $component) {
+        $components.= ', '.self::typename($component, $enclosing);
       }
+      return self::typename($type->base, $enclosing).'<'.substr($components, 2).'>';
+    } else if ($type instanceof IsArray) {
+      return self::typename($type->component, $enclosing).'[]';
+    } else if ($type instanceof IsMap) {
+      return '[:'.self::typename($type->value, $enclosing).']';
+    } else if ($type instanceof IsNullable) {
+      return '?'.self::typename($type->element, $enclosing);
+    } else if ($type instanceof IsUnion) {
+      $union= '';
+      foreach ($type->components as $component) {
+        $union.= '|'.self::typename($component, $enclosing);
+      }
+      return substr($union, 1);
+    } else if ($type instanceof IsIntersection) {
+      $intersection= '';
+      foreach ($type->components as $component) {
+        $intersection.= '&'.self::typename($component, $enclosing);
+      }
+      return substr($intersection, 1);
+    } else if ($type instanceof IsFunction) {
+      $parameters= '';
+      foreach ($type->signature as $parameter) {
+        $parameters.= ', '.self::typename($parameter, $enclosing);
+      }
+      return '(function('.substr($parameters, 2).'): '.self::typename($type->returns, $enclosing).')';
+    } else if ('self' === $type->literal || 'static' === $type->literal) {
+      return $enclosing->name->name();
+    } else if ('parent' === $type->literal) {
+      return $enclosing->parent->name->name();
+    } else if (
+      $enclosing->name instanceof IsGenericDeclaration &&
+      in_array($type->literal(), $enclosing->name->components())
+    ) {
+      return "'.\${$type->name()}->getName().'";
+    } else {
+      return $type->name();
     }
-    return $contained ? $generics : null;
   }
 
   /**
-   * Returns whether a given type is a generic component
+   * Returns node when node needs to be rewritten
    *
-   * @param  lang.ast.Type $type
-   * @param  lang.ast.Type[] $components
-   * @param  string $prefix
-   * @param  string $suffix
-   * @return ?string
+   * @param  string|lang.ast.Type $type
+   * @param  ?lang.ast.emit.InType $scope
+   * @param  ?lang.ast.Node
    */
-  private static function generic($type, $components, $prefix= '', $suffix= '') {
-    if ($type instanceof IsValue && in_array($type, $components)) {
-      return $prefix.self::component($type).$suffix;
-    } else if ($type instanceof IsNullable) {
-      if ($generic= self::generic($type->element, $components, $prefix, $suffix)) return '?'.$generic;
-    } else if ($type instanceof IsArray) {
-      if ($generic= self::generic($type->component, $components, $prefix, $suffix)) return $generic.'[]';
-    } else if ($type instanceof IsMap) {
-      if ($generic= self::generic($type->value, $components, $prefix, $suffix)) return '[:'.$generic.']';
-    } else if ($type instanceof IsUnion) {
-      if ($generic= self::generics($type->components, $components, $prefix, $suffix)) return implode('|', $generic);
-    } else if ($type instanceof IsGeneric) {
-      if ($generic= self::generics($type->components, $components, $prefix, $suffix)) {
-        return $type->base->name().'<'.implode(', ', $generic).'>';
-      }
-    } else if ($type instanceof IsFunction) {
-      if ($generic= self::generics(array_merge([$type->returns], $type->signature), $components, $prefix, $suffix)) {
-        $return= array_shift($generic);
-        return '(function('.implode(', ', $generic).'): '.$return.')';
+  public static function rewrite($type, $scope) {
+    if ($type instanceof IsGeneric) {
+      $name= self::typename($type, $scope->type ?? null);
+      return new InvokeExpression(
+        new ScopeExpression('\\lang\\Type', new Literal('forName')),
+        [new Literal("'{$name}'")]
+      );
+    }
+
+    // Check for types containing components
+    if ($scope) {
+      $name= self::typename($type instanceof Type ? $type : new IsValue($type), $scope->type ?? null);
+      if (false !== strpos($name, '$')) {
+        return new InvokeExpression(
+          new ScopeExpression('\\lang\\Type', new Literal('forName')),
+          [new Literal("'{$name}'")]
+        );
       }
     }
+
     return null;
   }
 
@@ -122,17 +139,17 @@ class Generics implements Extension {
    * Process a method and returns annotation arguments
    *
    * @param  lang.ast.nodes.Method $method
-   * @param  string[] $components
+   * @param  lang.ast.nodes.TypeDeclaration $type
    * @return lang.ast.Node[][]
    */
-  public static function method($method, $components) {
+  public static function method($method, $type) {
     $r= [];
 
     // Check all parameter types
     $params= [];
     foreach ($method->signature->parameters as $parameter) {
-      if ($parameter->type && ($generic= self::generic($parameter->type, $components))) {
-        $params[]= $generic.($parameter->variadic ? '...' : '');
+      if ($parameter->type && false !== strpos(self::typename($parameter->type, $type), '$')) {
+        $params[]= $parameter->type->name().($parameter->variadic ? '...' : '');
         $parameter->type= null;
       } else {
         $params[]= '';
@@ -141,8 +158,8 @@ class Generics implements Extension {
     $params && $r[]= [new Literal("'params'"), new Literal("'".implode(', ', $params)."'")];
 
     // Check return type
-    if ($method->signature->returns && ($generic= self::generic($method->signature->returns, $components))) {
-      $r[]= [new Literal("'return'"), new Literal("'".$generic."'")];
+    if ($method->signature->returns && false !== strpos(self::typename($method->signature->returns, $type), '$')) {
+      $r[]= [new Literal("'return'"), new Literal("'".$method->signature->returns->name()."'")];
       $method->signature->returns= null;
     }
 
@@ -153,15 +170,15 @@ class Generics implements Extension {
    * Process a property and returns annotation arguments
    *
    * @param  lang.ast.nodes.Property $property
-   * @param  string[] $components
+   * @param  lang.ast.nodes.TypeDeclaration $type
    * @return lang.ast.Node[][]
    */
-  public static function property($property, $components) {
+  public static function property($property, $type) {
     $r= [];
 
     // Check property type
-    if ($property->type && ($generic= self::generic($property->type, $components))) {
-      $r[]= [new Literal("'var'"), new Literal("'".$generic."'")];
+    if ($property->type && false !== strpos(self::typename($property->type, $type), '$')) {
+      $r[]= [new Literal("'var'"), new Literal("'".$property->type->name()."'")];
       $property->type= null;
     }
 
@@ -176,9 +193,10 @@ class Generics implements Extension {
    * @return lang.ast.nodes.TypeDeclaration
    */
   public static function type($type, $values) {
+    $type->name= new IsGenericDeclaration($type->name);
     $values[]= [
       new Literal("'self'"),
-      new Literal("'".self::components($type->name->components)."'")
+      new Literal("'".self::components($type->name->components())."'")
     ];
 
     // Attach generic annotation on type with components
@@ -186,16 +204,14 @@ class Generics implements Extension {
 
     // Rewrite property types
     foreach ($type->properties() as $property) {
-      self::annotate($property, self::property($property, $type->name->components));
+      self::annotate($property, self::property($property, $type));
     }
 
     // Rewrite constructor and method signatures
     foreach ($type->methods() as $method) {
-      self::annotate($method, self::method($method, $type->name->components));
+      self::annotate($method, self::method($method, $type));
     }
 
-    // Ensure class name is emitted as its base type
-    $type->name= new IsGenericDeclaration($type->name);
     return $type;
   }
 
@@ -207,44 +223,9 @@ class Generics implements Extension {
    */
   public function setup($language, $emitter) {
     $emitter->transform('new', function($codegen, $node) {
-      if ($node->type instanceof IsGeneric) {
-
-        // Call Type::forName() for each generic type arg
-        $typeargs= [];
-        foreach ($node->type->components as $type) {
-          $typeargs[]= [null, new InvokeExpression(
-            new ScopeExpression('\\lang\\Type', new Literal('forName')),
-            [new Literal("'".$type->literal()."'")]
-          )];
-        }
-
-        // XPClass::forName(T::class)->newGenericType($typeargs)->newInstance(...)
+      if ($rewrite= self::rewrite($node->type, $codegen->scope[0] ?? null)) {
         return new InvokeExpression(
-          new InstanceExpression(
-            new InvokeExpression(
-              new InstanceExpression(
-                new InvokeExpression(
-                  new ScopeExpression('\\lang\\XPClass', new Literal('forName')),
-                  [new ScopeExpression($node->type->base->literal(), new Literal('class'))]
-                ),
-                new Literal('newGenericType')
-              ),
-              [new ArrayLiteral($typeargs)]
-            ),
-            new Literal('newInstance')
-          ),
-          $node->arguments
-        );
-      }
-
-      // Rewrite `new T(...)` -> `$T->newInstance(...)` if T is a component
-      if (
-        ($name= $codegen->scope[0]->type->name ?? null) instanceof IsGenericDeclaration &&
-        $node->type instanceof IsValue &&
-        $generic= self::generic($node->type, $name->components())
-      ) {
-        return new InvokeExpression(
-          new InstanceExpression(new Variable($generic), new Literal('newInstance')),
+          new InstanceExpression($rewrite, new Literal('newInstance')),
           $node->arguments
         );
       }
@@ -252,16 +233,21 @@ class Generics implements Extension {
       return $node;
     });
 
-    $emitter->transform('instanceof', function($codegen, $node) {
-
-      // Rewrite `... instanceof T` -> `$T->isInstance(...)` if T is a component
-      if (
-        ($name= $codegen->scope[0]->type->name ?? null) instanceof IsGenericDeclaration &&
-        is_string($node->type) &&
-        $generic= self::generic(new IsValue($node->type), $name->components())
-      ) {
+    $emitter->transform('cast', function($codegen, $node) {
+      if ($rewrite= self::rewrite($node->type, $codegen->scope[0] ?? null)) {
         return new InvokeExpression(
-          new InstanceExpression(new Variable($generic), new Literal('isInstance')),
+          new InstanceExpression($rewrite, new Literal('cast')),
+          [$node->expression]
+        );
+      }
+
+      return $node;
+    });
+
+    $emitter->transform('instanceof', function($codegen, $node) {
+      if ($rewrite= self::rewrite($node->type, $codegen->scope[0] ?? null)) {
+        return new InvokeExpression(
+          new InstanceExpression($rewrite, new Literal('isInstance')),
           [$node->expression]
         );
       }
@@ -270,16 +256,9 @@ class Generics implements Extension {
     });
 
     $emitter->transform('scope', function($codegen, $node) {
-
-      // Rewrite `T::class` to `$T->literal()` if T is a component
-      if (
-        ($name= $codegen->scope[0]->type->name ?? null) instanceof IsGenericDeclaration &&
-        $node->member instanceof Literal &&
-        'class' === $node->member->expression &&
-        $generic= self::generic(new IsValue($node->type), $name->components())
-      ) {
+      if ($rewrite= self::rewrite($node->type, $codegen->scope[0] ?? null)) {
         return new InvokeExpression(
-          new InstanceExpression(new Variable($generic), new Literal('literal')),
+          new InstanceExpression($rewrite, new Literal('literal')),
           []
         );
       }
@@ -318,27 +297,8 @@ class Generics implements Extension {
 
       // Extend generic parent with type arguments. Ensure parent class
       // is created via newGenericType() before extending it.
-      if ($node->parent instanceof IsGeneric) {
-        $typeargs= [];
-        foreach ($node->parent->components as $type) {
-          $typeargs[]= [null, new InvokeExpression(
-            new ScopeExpression('\\lang\\Type', new Literal('forName')),
-            [new Literal("'".$type->literal()."'")]
-          )];
-        }
-        return [
-          new InvokeExpression(
-            new InstanceExpression(
-              new InvokeExpression(
-                new ScopeExpression('\\lang\\XPClass', new Literal('forName')),
-                [new Literal("'".$node->parent->base->literal()."'")]
-              ),
-              new Literal('newGenericType')
-            ),
-            [new ArrayLiteral($typeargs)]
-          ),
-          $node
-        ];
+      if ($node->parent && $rewrite= self::rewrite($node->parent, $codegen->scope[0] ?? null)) {
+        return [$rewrite, $node];
       }
 
       return $node;
@@ -362,20 +322,6 @@ class Generics implements Extension {
         $implements[0] && $values[]= [new Literal("'extends'"), new ArrayLiteral($implements[1])];
 
         return self::type($node, $values);
-      }
-      return $node;
-    });
-
-    $emitter->transform('cast', function($codegen, $node) {
-      $type= $codegen->scope[0]->type;
-      if ($type->name instanceof IsGenericDeclaration) {
-        if ($generic= self::generic($node->type, $type->name->components(), '{$_G[\'', '\']}')) {
-          return new TernaryExpression(
-            new Code('($_G ?? $_G= self::$__generic)'),
-            new InvokeExpression(new Literal('cast'), [$node->expression, new Literal('"'.$generic.'"')]),
-            new Literal('null')
-          );
-        }
       }
       return $node;
     });

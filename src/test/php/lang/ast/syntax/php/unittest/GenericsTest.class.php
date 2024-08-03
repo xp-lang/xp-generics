@@ -99,6 +99,18 @@ class GenericsTest extends EmittingTest {
   }
 
   #[Test]
+  public function new_class_of_component() {
+    $t= $this->type('class %T<E> {
+      public static function fixture() {
+        return new %T<E>();
+      }
+    }');
+    $type= $t->newGenericType([Primitive::$INT]);
+
+    Assert::instance($type, Reflection::type($type)->method('fixture')->invoke(null, []));
+  }
+
+  #[Test]
   public function instanceof_component() {
     $t= $this->type('class %T<E> {
       public static function fixture($arg) {
@@ -109,6 +121,57 @@ class GenericsTest extends EmittingTest {
       ->method('fixture')
       ->invoke(null, [$this])
     );
+  }
+
+  #[Test]
+  public function instanceof_self_with_component() {
+    $t= $this->type('class %T<E> {
+      public static function fixture() {
+        return new self<E>() instanceof self<E>;
+      }
+    }');
+    Assert::equals(true, Reflection::type($t->newGenericType([new XPClass(self::class)]))
+      ->method('fixture')
+      ->invoke(null, [])
+    );
+  }
+
+  #[Test]
+  public function generic_class() {
+    $t= $this->type('class %T<E> {
+      public static function fixture() {
+        return %T<string>::class;
+      }
+    }');
+    $invoke= $t->newGenericType([new XPClass(self::class)]);
+    $return= $t->newGenericType([Primitive::$STRING]);
+
+    Assert::equals($return->literal(), Reflection::type($invoke)->method('fixture')->invoke(null, []));
+  }
+
+  #[Test]
+  public function generic_self_class() {
+    $t= $this->type('class %T<E> {
+      public static function fixture() {
+        return self<string>::class;
+      }
+    }');
+    $invoke= $t->newGenericType([new XPClass(self::class)]);
+    $return= $t->newGenericType([Primitive::$STRING]);
+
+    Assert::equals($return->literal(), Reflection::type($invoke)->method('fixture')->invoke(null, []));
+  }
+
+  #[Test]
+  public function generic_component_class() {
+    $t= $this->type('class %T<E> {
+      public static function fixture() {
+        return %T<E>::class;
+      }
+    }');
+    $invoke= $t->newGenericType([new XPClass(self::class)]);
+
+    Assert::equals($invoke->literal(), Reflection::type($invoke)->method('fixture')->invoke(null, []));
   }
 
   #[Test]
