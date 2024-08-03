@@ -24,8 +24,8 @@ class MethodsTest extends EmittingTest {
    * @param  string $method
    * @return lang.Type
    */
-  private function parameterType($type, $method) {
-    return Reflection::type($type)->method($method)->parameter(0)->constraint()->type();
+  private function parameterType($type, $method, $position= 0) {
+    return Reflection::type($type)->method($method)->parameter($position)->constraint()->type();
   }
 
   /**
@@ -47,6 +47,16 @@ class MethodsTest extends EmittingTest {
 
     $c= Primitive::$STRING;
     Assert::equals($c, $this->parameterType($t->newGenericType([$c]), 'push'));
+  }
+
+  #[Test]
+  public function generic_parameter_type_following_non_generic() {
+    $t= $this->type('class %T<E> {
+      public function map(string $name, E $element) { }
+    }');
+
+    $c= typeof($this);
+    Assert::equals($c, $this->parameterType($t->newGenericType([$c]), 'map', 1));
   }
 
   #[Test]

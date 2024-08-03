@@ -3,6 +3,11 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 2.0.1 / 2024-08-03
+
+* Fixed non-generic and untyped parameters not being taken into account
+  (@thekid)
+
 ## 2.0.0 / 2024-03-24
 
 * Dropped support for PHP 7.0 - 7.3 - @thekid

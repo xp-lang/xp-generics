@@ -134,6 +134,8 @@ class Generics implements Extension {
       if ($parameter->type && ($generic= self::generic($parameter->type, $components))) {
         $params[]= $generic.($parameter->variadic ? '...' : '');
         $parameter->type= null;
+      } else {
+        $params[]= '';
       }
     }
     $params && $r[]= [new Literal("'params'"), new Literal("'".implode(', ', $params)."'")];
