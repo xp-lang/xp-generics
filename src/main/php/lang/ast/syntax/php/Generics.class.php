@@ -85,7 +85,7 @@ class Generics implements Extension {
     } else if ('self' === $type->literal || 'static' === $type->literal) {
       return $enclosing->name->name();
     } else if ('parent' === $type->literal) {
-      return $enclosing->parent->name->name();
+      return $enclosing->parent->name();
     } else if (
       $enclosing->name instanceof IsGenericDeclaration &&
       in_array($type->literal(), $enclosing->name->components())
