@@ -189,7 +189,7 @@ class GenericsTest extends EmittingTest {
 
   #[Test]
   public function string_queue() {
-    $r= $this->run('class %T<E> {
+    $r= $this->run('namespace test; class %T<E> {
       private array<E> $elements= [];
 
       public function __construct(E... $elements) {

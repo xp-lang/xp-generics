@@ -46,41 +46,42 @@ class Generics implements Extension {
    *
    * @param  lang.ast.types.IsGeneric $type
    * @param  ?lang.ast.nodes.TypeDeclaration $enclosing
+   * @param  bool literal
    * @param  string
    */
-  public static function typename($type, $enclosing) {
+  public static function typename($type, $enclosing, $literal= false) {
     if (null === $enclosing || $type instanceof IsLiteral) {
       return $type->name();
     } else if ($type instanceof IsGeneric) {
       $components= '';
       foreach ($type->components as $component) {
-        $components.= ', '.self::typename($component, $enclosing);
+        $components.= ', '.self::typename($component, $enclosing, $literal);
       }
-      return self::typename($type->base, $enclosing).'<'.substr($components, 2).'>';
+      return self::typename($type->base, $enclosing, $literal).'<'.substr($components, 2).'>';
     } else if ($type instanceof IsArray) {
-      return self::typename($type->component, $enclosing).'[]';
+      return self::typename($type->component, $enclosing, $literal).'[]';
     } else if ($type instanceof IsMap) {
-      return '[:'.self::typename($type->value, $enclosing).']';
+      return '[:'.self::typename($type->value, $enclosing, $literal).']';
     } else if ($type instanceof IsNullable) {
-      return '?'.self::typename($type->element, $enclosing);
+      return '?'.self::typename($type->element, $enclosing, $literal);
     } else if ($type instanceof IsUnion) {
       $union= '';
       foreach ($type->components as $component) {
-        $union.= '|'.self::typename($component, $enclosing);
+        $union.= '|'.self::typename($component, $enclosing, $literal);
       }
       return substr($union, 1);
     } else if ($type instanceof IsIntersection) {
       $intersection= '';
       foreach ($type->components as $component) {
-        $intersection.= '&'.self::typename($component, $enclosing);
+        $intersection.= '&'.self::typename($component, $enclosing, $literal);
       }
       return substr($intersection, 1);
     } else if ($type instanceof IsFunction) {
       $parameters= '';
       foreach ($type->signature as $parameter) {
-        $parameters.= ', '.self::typename($parameter, $enclosing);
+        $parameters.= ', '.self::typename($parameter, $enclosing, $literal);
       }
-      return '(function('.substr($parameters, 2).'): '.self::typename($type->returns, $enclosing).')';
+      return '(function('.substr($parameters, 2).'): '.self::typename($type->returns, $enclosing, $literal).')';
     } else if ('self' === $type->literal || 'static' === $type->literal) {
       return $enclosing->name->name();
     } else if ('parent' === $type->literal) {
@@ -89,7 +90,8 @@ class Generics implements Extension {
       $enclosing->name instanceof IsGenericDeclaration &&
       in_array($type->literal(), $enclosing->name->components())
     ) {
-      return "'.\${$type->name()}->getName().'";
+      $component= '$'.substr($type->literal, strrpos($type->literal, '\\') + 1);
+      return $literal ? $component : "'.{$component}->getName().'";
     } else {
       return $type->name();
     }
@@ -148,8 +150,8 @@ class Generics implements Extension {
     // Check all parameter types
     $params= [];
     foreach ($method->signature->parameters as $parameter) {
-      if ($parameter->type && false !== strpos(self::typename($parameter->type, $type), '$')) {
-        $params[]= $parameter->type->name().($parameter->variadic ? '...' : '');
+      if ($parameter->type && false !== strpos($name= self::typename($parameter->type, $type, true), '$')) {
+        $params[]= str_replace('$', '', $name).($parameter->variadic ? '...' : '');
         $parameter->type= null;
       } else {
         $params[]= '';
@@ -158,8 +160,8 @@ class Generics implements Extension {
     $params && $r[]= [new Literal("'params'"), new Literal("'".implode(', ', $params)."'")];
 
     // Check return type
-    if ($method->signature->returns && false !== strpos(self::typename($method->signature->returns, $type), '$')) {
-      $r[]= [new Literal("'return'"), new Literal("'".$method->signature->returns->name()."'")];
+    if ($method->signature->returns && false !== strpos($name= self::typename($method->signature->returns, $type, true), '$')) {
+      $r[]= [new Literal("'return'"), new Literal("'".str_replace('$', '', $name)."'")];
       $method->signature->returns= null;
     }
 

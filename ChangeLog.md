@@ -5,6 +5,9 @@ XP generics for PHP - ChangeLog
 
 ## 2.1.0 / 2024-08-04
 
+* Fixed generic type component resolution inside namespaces - @thekid
+* Fixed issue #10: *Undefined property: lang\ast\types\IsValue::$name*
+  (@thekid)
 * Merged PR #9: Implement resolving `T<string>::class` - @thekid
 
 ## 2.0.1 / 2024-08-03
