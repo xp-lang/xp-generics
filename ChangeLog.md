@@ -3,6 +3,10 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 2.1.0 / 2024-08-04
+
+* Merged PR #9: Implement resolving `T<string>::class` - @thekid
+
 ## 2.0.1 / 2024-08-03
 
 * Fixed non-generic and untyped parameters not being taken into account
