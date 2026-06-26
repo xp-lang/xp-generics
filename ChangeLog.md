@@ -3,6 +3,8 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 2.1.1 / 2026-06-26
+
 * Fixed `new [expr]()` raising *Expressions cannot be used as type name*
   (@thekid)
 * Added support for PHP 8.5 & PHP 8.6 - @thekid
