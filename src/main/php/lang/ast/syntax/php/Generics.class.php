@@ -11,7 +11,7 @@ use lang\ast\nodes\{
   Variable
 };
 use lang\ast\syntax\Extension;
-use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsIntersection, IsLiteral, IsMap, IsUnion, IsNullable, IsValue};
+use lang\ast\types\{IsArray, IsFunction, IsGeneric, IsIntersection, IsLiteral, IsMap, IsUnion, IsNullable, IsValue, IsExpression};
 use lang\ast\{Type, Code};
 
 /**
@@ -105,7 +105,9 @@ class Generics implements Extension {
    * @param  ?lang.ast.Node
    */
   public static function rewrite($type, $scope) {
-    if ($type instanceof IsGeneric) {
+    if ($type instanceof IsExpression) {
+      return null;
+    } else if ($type instanceof IsGeneric) {
       $name= self::typename($type, $scope->type ?? null);
       return new InvokeExpression(
         new ScopeExpression('\\lang\\Type', new Literal('forName')),
