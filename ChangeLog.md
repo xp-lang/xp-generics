@@ -3,6 +3,8 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+* Added PHP 8.5 and PHP 8.6 to the test matrix - @thekid
+
 ## 2.1.0 / 2024-08-04
 
 * Fixed generic type component resolution inside namespaces - @thekid
