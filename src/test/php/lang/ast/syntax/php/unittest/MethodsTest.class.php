@@ -14,6 +14,7 @@ use lang\{
   WildcardType
 };
 use test\{Assert, Expect, Test};
+use test\verify\Runtime;
 
 class MethodsTest extends EmittingTest {
 
@@ -108,7 +109,7 @@ class MethodsTest extends EmittingTest {
     Assert::equals(new Nullable($c), $this->returnType($t->newGenericType([$c]), 'pop'));
   }
 
-  #[Test]
+  #[Test, Runtime(php: '>=8.0')]
   public function generic_type() {
     $l= $this->type('class %T<E> { }');
     $t= $this->type('class %T<E> {
