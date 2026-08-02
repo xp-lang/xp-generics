@@ -69,6 +69,7 @@ No further action is required.
 
 See also
 --------
+* [Generics: The Comments Become Code by Holly Schilling](https://eventuallywrong.com/php9/generics) from July 2025
 * [Generics in PHP??? - PHP Annotated](https://www.youtube.com/watch?v=ffhhx5_TUB8) from August 2024
 * [State of Generics and Collections](https://thephp.foundation/blog/2024/08/19/state-of-generics-and-collections/) from August 2024
 * [XP RFC: Generics](https://github.com/xp-framework/rfc/issues/106) from January 2007
