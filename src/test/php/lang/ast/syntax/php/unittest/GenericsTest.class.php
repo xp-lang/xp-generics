@@ -51,7 +51,7 @@ class GenericsTest extends EmittingTest {
     $t= $this->type('class %T<E> extends '.$i->literal().'<E> { }');
 
     $c= Primitive::$STRING;
-    Assert::equals([$c], $t->newGenericType([$c])->getParentclass()->genericArguments());
+    Assert::equals([$c], Reflection::type($t->newGenericType([$c]))->parent()->class()->genericArguments());
   }
 
   #[Test]
@@ -71,7 +71,7 @@ class GenericsTest extends EmittingTest {
     $t= $this->type('class %T extends '.$i->literal().'<string> { }');
 
     $c= Primitive::$STRING;
-    Assert::equals([$c], $t->getParentclass()->genericArguments());
+    Assert::equals([$c], Reflection::type($t)->parent()->class()->genericArguments());
     Assert::equals('', $t->newInstance()->defaultValue());
   }
 

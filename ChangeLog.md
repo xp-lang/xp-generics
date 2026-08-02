@@ -3,6 +3,12 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 2.1.2 / 2026-08-02
+
+* Added forward-compatible refactoring for XP 13 by rewriting reflection
+  calls to use the reflection library.
+  (@thekid)
+
 ## 2.1.1 / 2026-06-26
 
 * Fixed `new [expr]()` raising *Expressions cannot be used as type name*
