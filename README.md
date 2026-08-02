@@ -28,6 +28,7 @@ class PriorityQueue<E> {
 
   public function comparing(?function(E, E): int $comparator): self {
     $this->comparator= $comparator;
+    $this->sorted= !empty($this->elements);
     return $this;
   }
 
