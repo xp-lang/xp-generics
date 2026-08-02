@@ -5,8 +5,10 @@ XP generics for PHP - ChangeLog
 
 ## 2.1.2 / 2026-08-02
 
+* Fixed testing compatibility with generic argument validation in XP 13
+  (@thekid)
 * Added forward-compatible refactoring for XP 13 by rewriting reflection
-  calls to use the reflection library.
+  calls to use the reflection library
   (@thekid)
 
 ## 2.1.1 / 2026-06-26

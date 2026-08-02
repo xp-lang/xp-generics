@@ -13,8 +13,8 @@ use lang\{
   Wildcard,
   WildcardType
 };
-use test\{Assert, Expect, Test};
 use test\verify\Runtime;
+use test\{Assert, Expect, Test};
 
 class MethodsTest extends EmittingTest {
 
@@ -131,7 +131,7 @@ class MethodsTest extends EmittingTest {
     }');
   }
 
-  #[Test, Expect(class: IllegalArgumentException::class, message: '/Vararg 1 .+ must be of string.*, var.* given/')]
+  #[Test, Expect(class: IllegalArgumentException::class, message: '/(Vararg|Argument) 1 .+ must be of string.*, var.* given/')]
   public function incorrect_variadic_parameter_type() {
     $this->run('class %T<E> {
       public function push(E... $elements) { /* Never run */ }
