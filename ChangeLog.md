@@ -3,8 +3,10 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
-## 2.1.2 / 2026-08-02
+## 2.2.0 / 2026-08-02
 
+* Made emitted annotations compatible with PHP attributes' named arguments
+  (@thekid)
 * Fixed testing compatibility with generic argument validation in XP 13
   (@thekid)
 * Added forward-compatible refactoring for XP 13 by rewriting reflection

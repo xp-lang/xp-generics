@@ -133,10 +133,10 @@ class Generics implements Extension {
    * Add a `lang.Generic` annotation
    * 
    * @param  lang.ast.nodes.Annotated $annotated
-   * @param  lang.ast.Node[][] $arguments
+   * @param  [:lang.ast.Node] $annotations
    */
-  public static function annotate($annotated, $arguments) {
-    $arguments && $annotated->annotate(new Annotation('lang\\Generic', [new ArrayLiteral($arguments)]));
+  public static function annotate($annotated, $annotations) {
+    $annotations && $annotated->annotate(new Annotation('lang\\Generic', $annotations));
   }
 
   /**
@@ -159,11 +159,11 @@ class Generics implements Extension {
         $params[]= '';
       }
     }
-    $params && $r[]= [new Literal("'params'"), new Literal("'".implode(', ', $params)."'")];
+    $params && $r['params']= new Literal("'".implode(', ', $params)."'");
 
     // Check return type
     if ($method->signature->returns && false !== strpos($name= self::typename($method->signature->returns, $type, true), '$')) {
-      $r[]= [new Literal("'return'"), new Literal("'".str_replace('$', '', $name)."'")];
+      $r['return']= new Literal("'".str_replace('$', '', $name)."'");
       $method->signature->returns= null;
     }
 
@@ -182,7 +182,7 @@ class Generics implements Extension {
 
     // Check property type
     if ($property->type && false !== strpos(self::typename($property->type, $type), '$')) {
-      $r[]= [new Literal("'var'"), new Literal("'".$property->type->name()."'")];
+      $r['var']= new Literal("'".$property->type->name()."'");
       $property->type= null;
     }
 
@@ -193,18 +193,15 @@ class Generics implements Extension {
    * Process a type
    *
    * @param  lang.ast.nodes.TypeDeclaration $type
-   * @param  lang.ast.Node[][] $values
+   * @param  [:lang.ast.Node] $annotations
    * @return lang.ast.nodes.TypeDeclaration
    */
-  public static function type($type, $values) {
+  public static function type($type, $annotations) {
     $type->name= new IsGenericDeclaration($type->name);
-    $values[]= [
-      new Literal("'self'"),
-      new Literal("'".self::components($type->name->components())."'")
-    ];
 
     // Attach generic annotation on type with components
-    self::annotate($type, $values);
+    $annotations['self']= new Literal("'".self::components($type->name->components())."'");
+    self::annotate($type, $annotations);
 
     // Rewrite property types
     foreach ($type->properties() as $property) {
@@ -272,14 +269,11 @@ class Generics implements Extension {
 
     $emitter->transform('class', function($codegen, $node) {
       if ($node->name instanceof IsGeneric) {
-        $values= [];
+        $annotations= [];
 
         // Rewrite if parent class is generic
         if ($node->parent instanceof IsGeneric) {
-          $values[]= [
-            new Literal("'parent'"),
-            new Literal("'".self::components($node->parent->components)."'")
-          ];
+          $annotations['parent']= new Literal("'".self::components($node->parent->components)."'");
           $node->parent= $node->parent->base;
         }
 
@@ -294,9 +288,9 @@ class Generics implements Extension {
             $implements[1][]= [null, new Literal('null')];
           }
         }
-        $implements[0] && $values[]= [new Literal("'implements'"), new ArrayLiteral($implements[1])];
+        $implements[0] && $annotations['implements']= new ArrayLiteral($implements[1]);
 
-        return self::type($node, $values);
+        return self::type($node, $annotations);
       }
 
       // Extend generic parent with type arguments. Ensure parent class
@@ -310,7 +304,7 @@ class Generics implements Extension {
 
     $emitter->transform('interface', function($codegen, $node) {
       if ($node->name instanceof IsGeneric) {
-        $values= [];
+        $annotations= [];
 
         // Rewrite if any of the parent interfaces is generic
         $implements= [0, []];
@@ -323,9 +317,9 @@ class Generics implements Extension {
             $implements[1][]= [null, new Literal('null')];
           }
         }
-        $implements[0] && $values[]= [new Literal("'extends'"), new ArrayLiteral($implements[1])];
+        $implements[0] && $annotations['extends']= new ArrayLiteral($implements[1]);
 
-        return self::type($node, $values);
+        return self::type($node, $annotations);
       }
       return $node;
     });
