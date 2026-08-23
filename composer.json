@@ -7,7 +7,8 @@
   "keywords": ["language", "module", "xp"],
   "minimum-stability": "dev",
   "require" : {
-    "xp-framework/core": "^12.0 | ^11.4",
+    "xp-framework/core": "^12.13",
+    "xp-framework/ast": "dev-feature/generic-methods as 13.1.0",
     "xp-framework/compiler": "^9.0 | ^8.8",
     "php" : ">=7.4.0"
   },

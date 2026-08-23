@@ -74,7 +74,7 @@ class CastingTest extends EmittingTest {
     }');
 
     Assert::equals(
-      Primitive::$STRING->cast($value),
+      cast($value, '?string'),
       $this->invokeFixture($t->newGenericType([Primitive::$STRING]), [$value])
     );
   }
