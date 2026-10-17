@@ -3,6 +3,7 @@
 use lang\ast\nodes\{
   Annotation,
   ArrayLiteral,
+  Generic,
   InstanceExpression,
   InvokeExpression,
   Literal,
@@ -25,6 +26,23 @@ use lang\ast\{Type, Code};
  * @test  lang.ast.syntax.php.unittest.MethodsTest
  */
 class Generics implements Extension {
+
+  /**
+   * Search a given scope recursively for nodes with a given kind
+   *
+   * @param  lang.ast.Node $node
+   * @param  string $kind
+   * @return iterable
+   */
+  public static function search($node, $kind) {
+    if ($node->kind === $kind) yield $node;
+
+    foreach ($node->children() as $child) {
+      foreach (self::search($child, $kind) as $result) {
+        yield $result;
+      }
+    }
+  }
 
   /**
    * Returns the component list for a given type list
@@ -149,6 +167,27 @@ class Generics implements Extension {
   public static function method($method, $type) {
     $r= [];
 
+    // Generic methods' type arguments
+    if ($method->signature->generic) {
+      $components= [];
+      foreach ($method->signature->generic as $component) {
+        $components[]= self::typename($component, $type, true);
+      }
+      $r['self']= new Literal("'".implode(', ', $components)."'");
+
+      // Locate any `new` expressions and replace the type arguments. Note:
+      // If we had method scopes, this could happen inside `new` transforms!
+      foreach (self::search($method->body, 'new') as $new) {
+        if ($new->type instanceof IsGeneric) {
+          foreach ($new->type->components as &$component) {
+            if (false !== ($p= array_search($component, $method->signature->generic))) {
+              $component= new IsLiteral("'.\$__T[{$p}]->getName().'");
+            }
+          }
+        }
+      }
+    }
+
     // Check all parameter types
     $params= [];
     foreach ($method->signature->parameters as $parameter) {
@@ -228,6 +267,27 @@ class Generics implements Extension {
         return new InvokeExpression(
           new InstanceExpression($rewrite, new Literal('newInstance')),
           $node->arguments
+        );
+      }
+
+      return $node;
+    });
+
+    $emitter->transform('invoke', function($codegen, $node) {
+      if ($node->expression instanceof InstanceExpression && $node->expression->member instanceof Generic) {
+        $types= [];
+        foreach ($node->expression->member->components as $component) {
+          $types[]= [null, new InvokeExpression(
+            new ScopeExpression(new IsValue('\\lang\\Type'), new Literal('forName')),
+            [ new Literal("'{$component->name()}'")]
+          )];
+        }
+
+        // Prepend typeargs to invocation
+        array_unshift($node->arguments, new ArrayLiteral($types));
+        $node->expression->member= new Literal(
+          $node->expression->member->expression,
+          $node->expression->member->line
         );
       }
 
