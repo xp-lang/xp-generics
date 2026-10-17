@@ -3,6 +3,10 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+## 3.0.0 / 2026-10-17
+
+* **Heads up:** Dropped support for PHP < 7.4, see xp-framework/rfc#343
+  (@thekid)
 * Merged PR #12: Support generic methods. See xp-framework/core#372
   (@thekid)
 
