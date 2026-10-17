@@ -20,7 +20,7 @@ class SequenceTest extends EmittingTest {
         return $this;
       }
 
-      public function map<R>(function(T): mixed $mapper): self<R> {
+      public function map<R>(function(T): R $mapper): self<R> {
         $mapped= [];
         foreach ($this->elements as $element) {
           $mapped[]= $mapper($element);
