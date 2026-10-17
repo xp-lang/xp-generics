@@ -3,6 +3,9 @@ XP generics for PHP - ChangeLog
 
 ## ?.?.? / ????-??-??
 
+* Merged PR #12: Support generic methods. See xp-framework/core#372
+  (@thekid)
+
 ## 2.2.0 / 2026-08-02
 
 * Made emitted annotations compatible with PHP attributes' named arguments
