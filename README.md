@@ -70,7 +70,7 @@ No further action is required.
 See also
 --------
 
-* [XP Core: Generic Methods](https://github.com/xp-framework/core/pull/372)
+* [XP Core: Generic Methods](https://github.com/xp-framework/core/pull/372) available in XP 12.13+
 * [Generics: The Comments Become Code by Holly Schilling](https://eventuallywrong.com/php9/generics) from July 2026
 * [PHP RFC: Bound-Erased Generic Types](https://wiki.php.net/rfc/bound_erased_generic_types) from May 2026 - *declined*
 * [PHP generics written in PHP](https://mrsuh.com/projects/php-generics/) from Anton Sukhachev 
